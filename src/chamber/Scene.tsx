@@ -13,7 +13,7 @@ type Fit = { radius: number; halfY: number };
 
 function frameDistance(radius: number) {
   const half = THREE.MathUtils.degToRad(FOV) / 2;
-  return (radius / Math.sin(half)) * 0.8;
+  return (radius / Math.sin(half)) * 0.9;
 }
 
 function smooth(t: number) {
@@ -52,11 +52,11 @@ function sampleKeys(
 }
 
 const PASS = [
-  { t: 0, dir: [0.46, 0.24, 0.82] as [number, number, number], dist: 1, look: [0.08, -0.02, 0] as [number, number, number] },
-  { t: 0.28, dir: [0.18, -0.22, 0.95] as [number, number, number], dist: 0.86, look: [0, -0.46, 0.04] as [number, number, number] },
-  { t: 0.52, dir: [1, 0.14, 0.06] as [number, number, number], dist: 0.7, look: [0, 0.06, 0] as [number, number, number] },
-  { t: 0.76, dir: [0.5, 0.3, 0.78] as [number, number, number], dist: 0.88, look: [0.05, 0.02, 0] as [number, number, number] },
-  { t: 1, dir: [0.42, 0.22, 0.74] as [number, number, number], dist: 0.9, look: [0, 0.02, 0] as [number, number, number] },
+  { t: 0, dir: [0.62, 0.2, 0.74] as [number, number, number], dist: 1.08, look: [0, -0.06, 0] as [number, number, number] },
+  { t: 0.28, dir: [0.16, -0.12, 0.96] as [number, number, number], dist: 1.05, look: [0, -0.28, 0] as [number, number, number] },
+  { t: 0.52, dir: [0.96, 0.14, 0.18] as [number, number, number], dist: 1.02, look: [0, 0.02, 0] as [number, number, number] },
+  { t: 0.76, dir: [0.5, 0.22, 0.76] as [number, number, number], dist: 1.08, look: [0, -0.02, 0] as [number, number, number] },
+  { t: 1, dir: [0.56, 0.2, 0.76] as [number, number, number], dist: 1.12, look: [0, -0.04, 0] as [number, number, number] },
 ];
 
 const BENCH: Record<CameraPreset, { dir: [number, number, number]; dist: number; look: [number, number, number] }> = {
@@ -114,30 +114,22 @@ function Rig({
     const lambda = reduced ? 16 : mode === "pass" ? 3.4 : 4.2;
     const fit = fitRef.current;
     const distance = frameDistance(fit.radius || 1.25);
-    const wide = state.size.width > 960;
-    const xShift = chamber.mode === "pass" && wide ? 0.38 : 0;
-    const yShift = chamber.mode === "bench" ? 0.2 : 0.08;
-    const bob = chamber.mode === "pass" && !reduced ? Math.sin(state.clock.elapsedTime * 0.45) * 0.012 : 0;
+    const lift = chamber.mode === "bench" ? 0.62 : 0.14;
+    const bob = chamber.mode === "pass" && !reduced ? Math.sin(state.clock.elapsedTime * 0.45) * 0.01 : 0;
 
     if (presentation.current) {
-      presentation.current.position.x = THREE.MathUtils.damp(presentation.current.position.x, xShift, lambda, d);
-      presentation.current.position.y = THREE.MathUtils.damp(presentation.current.position.y, yShift + bob, lambda, d);
+      presentation.current.position.x = THREE.MathUtils.damp(presentation.current.position.x, 0, lambda, d);
+      presentation.current.position.y = THREE.MathUtils.damp(presentation.current.position.y, lift + bob, lambda, d);
     }
     if (floor.current) floor.current.position.y = -(fit.halfY || 0.7) - 0.02;
 
     if (chamber.mode === "pass") {
       sampleKeys(PASS, progressRef.current ?? 0, distance, wantPos, wantLook);
-      wantPos.x += xShift;
-      wantLook.x += xShift;
-      wantLook.y += yShift;
     } else if (flying.current) {
       const preset = BENCH[cameraPreset];
       dir.set(preset.dir[0], preset.dir[1], preset.dir[2]).normalize();
       wantPos.copy(dir).multiplyScalar(preset.dist * distance);
-      wantPos.x += xShift;
       wantLook.set(preset.look[0], preset.look[1], preset.look[2]);
-      wantLook.x += xShift;
-      wantLook.y += yShift;
     }
 
     if (chamber.mode === "pass" || flying.current) {
@@ -153,20 +145,29 @@ function Rig({
       controls.current.enabled = true;
     }
 
-    const mark = Math.max(0, 1 - Math.abs((progressRef.current ?? 0) - 0.52) / 0.16);
-    if (key.current) key.current.intensity = chamber.mode === "pass" ? 3.3 - mark * 1.5 : 3.15;
-    if (rim.current) rim.current.intensity = chamber.mode === "pass" ? 1.6 + mark * 3.2 : 1.8;
+    if (key.current) key.current.intensity = chamber.mode === "pass" ? 1.7 : 1.45;
+    if (rim.current) rim.current.intensity = 0.32;
   });
 
   return (
     <>
       <color attach="background" args={["#090909"]} />
-      <hemisphereLight args={["#f3ecdf", "#1a120e", 0.42]} />
+      <hemisphereLight args={["#f4efe4", "#14110e", 0.28]} />
+      <spotLight
+        position={[0.2, 7.4, 2.6]}
+        angle={0.34}
+        penumbra={1}
+        intensity={26}
+        color="#fffaf4"
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-bias={-0.0004}
+      />
       <directionalLight
         ref={key}
-        position={[4.2, 5.4, 2.6]}
-        intensity={3.2}
-        color="#fff4e8"
+        position={[2.8, 6.4, 2.4]}
+        intensity={1.55}
+        color="#fffaf4"
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-camera-near={0.4}
@@ -176,29 +177,25 @@ function Rig({
         shadow-camera-top={3.2}
         shadow-camera-bottom={-3.2}
         shadow-bias={-0.00035}
-        shadow-normalBias={0.035}
+        shadow-normalBias={0.04}
       />
-      <directionalLight ref={rim} position={[-4.2, 2.4, -3.1]} intensity={1.8} color="#ff4d1c" />
-      <directionalLight position={[-1.2, 1.4, 4.4]} intensity={0.85} color="#f3ecdf" />
+      <directionalLight ref={rim} position={[-3.2, 2.4, -2.2]} intensity={0.32} color="#e7e2d8" />
+      <directionalLight position={[-0.4, 1.4, 4.2]} intensity={0.22} color="#f7f4ee" />
       <group ref={presentation}>
         <Suspense fallback={null}>
           <Shoe progressRef={progressRef} shellPlane={shellPlane} lastPlane={lastPlane} fitRef={fitRef} />
         </Suspense>
         <group ref={floor}>
           <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-            <circleGeometry args={[3.4, 64]} />
-            <meshStandardMaterial color="#0c0b09" roughness={1} metalness={0} />
-          </mesh>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]}>
-            <ringGeometry args={[1.35, 1.42, 80]} />
-            <meshBasicMaterial color="#2a2622" transparent opacity={0.9} />
+            <circleGeometry args={[4.2, 64]} />
+            <meshStandardMaterial color="#141311" roughness={1} metalness={0} />
           </mesh>
         </group>
       </group>
-      <Environment resolution={128} environmentIntensity={0.62}>
-        <Lightformer form="rect" intensity={3.2} position={[0, 3.2, -2]} scale={[7, 2.2, 1]} color="#fff6ec" />
-        <Lightformer form="rect" intensity={2.4} position={[-4, 1.2, 1]} scale={[2.4, 3.2, 1]} color="#ff4d1c" />
-        <Lightformer form="rect" intensity={1.6} position={[4.2, 0.4, 2.4]} scale={[1.4, 3.6, 1]} color="#f3ecdf" />
+      <Environment resolution={128} environmentIntensity={0.42}>
+        <Lightformer form="rect" intensity={1.4} position={[0, 3.6, -1.5]} scale={[5, 1.2, 1]} color="#fffaf4" />
+        <Lightformer form="rect" intensity={0.35} position={[-3.2, 1.6, 1.2]} scale={[1.2, 2.2, 1]} color="#f3ecdf" />
+        <Lightformer form="rect" intensity={0.45} position={[3.4, 1.2, 2]} scale={[1, 2.2, 1]} color="#f7f4ee" />
       </Environment>
       <OrbitControls
         ref={controls}
@@ -246,7 +243,7 @@ export function Scene({
       }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.08;
+        gl.toneMappingExposure = 0.96;
         gl.setClearColor("#090909");
       }}
     >

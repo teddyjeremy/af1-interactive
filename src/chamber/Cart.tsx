@@ -54,8 +54,8 @@ export function Cart() {
     <aside className="cart" role="dialog" aria-label="Study cart">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <p className="font-mono text-xs tracking-widest text-steel uppercase">Study cart</p>
-          <h2 className="font-display text-3xl leading-none text-bone">
+          <p className="inst-label">Study cart</p>
+          <h2 className="mt-1 font-display text-xl italic leading-none text-bone">
             {order ? "Noted" : count ? `${count} ${count === 1 ? "pair" : "pairs"}` : "Empty"}
           </h2>
         </div>
@@ -68,10 +68,10 @@ export function Cart() {
         <div>
           <p className="font-mono text-sm text-heat">{order.code}</p>
           <p className="mt-3 text-sm leading-relaxed text-bone">
-            Logged for {order.buyer}. {order.count} {order.count === 1 ? "pair" : "pairs"} · {money(order.total)}.
+            Logged for {order.buyer}. {order.count} {order.count === 1 ? "pair" : "pairs"}, {money(order.total)}.
           </p>
           <p className="mt-3 text-sm leading-relaxed text-steel">
-            Nothing was charged. Chamber is a portfolio — the checkout only keeps a study note in this session.
+            Nothing was charged. This is a portfolio study. The note stays in this session.
           </p>
           {note.trim() && <p className="mt-3 font-mono text-xs text-bone">“{note.trim()}”</p>}
           <button
@@ -96,11 +96,11 @@ export function Cart() {
           <p className="text-sm leading-relaxed text-steel">
             {money(total)} across {count} {count === 1 ? "pair" : "pairs"}. No card, no charge.
           </p>
-          <label className="font-mono text-xs tracking-widest text-steel uppercase">
+          <label className="inst-label">
             Name
             <input className="field mt-1" value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" />
           </label>
-          <label className="font-mono text-xs tracking-widest text-steel uppercase">
+          <label className="inst-label">
             Email
             <input
               className="field mt-1"
@@ -110,7 +110,7 @@ export function Cart() {
               autoComplete="email"
             />
           </label>
-          <label className="font-mono text-xs tracking-widest text-steel uppercase">
+          <label className="inst-label">
             Note
             <textarea className="field field-area mt-1" value={note} onChange={(event) => setNote(event.target.value)} rows={3} />
           </label>
@@ -139,11 +139,11 @@ export function Cart() {
               <li key={line.id} className="border border-line p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-mono text-sm text-bone">
-                      {line.name} · US {line.size}
+                    <p className="text-sm text-bone">
+                      {line.name}, US {line.size}
                     </p>
-                    <p className="mt-1 font-mono text-xs text-steel">
-                      {line.prints ? "Prints on" : "No prints"} · US {line.size} · {money(pairPrice(line.design, line.prints, line.size))}
+                    <p className="mt-1 text-xs text-steel">
+                      {line.prints ? "Prints on" : "No prints"}, US {line.size}, {money(pairPrice(line.design, line.prints, line.size))}
                     </p>
                   </div>
                   <p className="font-mono text-sm text-heat">{money(lineTotal(line))}</p>
@@ -179,14 +179,14 @@ export function Cart() {
             ))}
           </ul>
           <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
-            <p className="font-mono text-xs tracking-widest text-steel uppercase">Noted total</p>
+            <p className="inst-label">Noted total</p>
             <p className="font-mono text-sm text-bone">{money(total)}</p>
           </div>
           <button type="button" className="mode-btn mode-btn-on" onClick={() => setStep("details")}>
             Checkout
           </button>
           <p className="font-mono text-xs leading-relaxed text-steel">
-            Portfolio only. Checkout writes a study note. It does not take payment.
+            Portfolio only. Checkout writes a note. It does not take payment.
           </p>
         </div>
       )}

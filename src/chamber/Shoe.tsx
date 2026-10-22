@@ -163,8 +163,10 @@ function paint(
   pulse: React.MutableRefObject<number>,
 ) {
   const chamber = useChamber.getState();
-  const hold = chamber.mode === "bench" || chamber.edited;
-  const sample = hold ? { from: chamber.design, to: chamber.design, t: 0 } : passPair(progress);
+  const sample =
+    chamber.mode === "bench"
+      ? { from: chamber.design, to: chamber.design, t: 0 }
+      : passPair(progress);
   const selected = new Set(chamber.selected);
   const selKey = chamber.selected.join("|");
   if (prevSel.current !== selKey) {
@@ -191,7 +193,7 @@ function paint(
     mat.clearcoatRoughness = THREE.MathUtils.damp(mat.clearcoatRoughness, finish.clearcoatRoughness, 7, delta);
     mat.iridescence = THREE.MathUtils.damp(mat.iridescence, finish.iridescence, 7, delta);
     mat.sheen = THREE.MathUtils.damp(mat.sheen, finish.sheen, 7, delta);
-    mat.sheenColor.copy(mat.color);
+    mat.sheenColor.set("#f4efe6");
     mat.envMapIntensity = THREE.MathUtils.damp(mat.envMapIntensity, finish.env, 7, delta);
 
     const treat = sample.t < 0.5 ? from.treatment : to.treatment;
@@ -208,8 +210,8 @@ function paint(
 
     const hot = selected.has(panel.name);
     const over = hover === panel.name;
-    mat.emissive.set(hot || over ? "#ff4d1c" : "#000000");
-    mat.emissiveIntensity = hot ? 0.16 + pulse.current * 0.5 : over ? 0.08 : 0;
+    mat.emissive.set(hot || over ? "#c45c26" : "#000000");
+    mat.emissiveIntensity = hot ? 0.08 + pulse.current * 0.2 : over ? 0.04 : 0;
   }
 }
 

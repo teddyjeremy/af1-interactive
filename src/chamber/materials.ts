@@ -15,7 +15,7 @@ export const FINISH_PROPS: Record<
     env: number;
   }
 > = {
-  leather: { roughness: 0.56, metalness: 0.02, clearcoat: 0.16, clearcoatRoughness: 0.42, iridescence: 0, sheen: 0.18, env: 0.85 },
+  leather: { roughness: 0.58, metalness: 0.02, clearcoat: 0.12, clearcoatRoughness: 0.46, iridescence: 0, sheen: 0.06, env: 0.7 },
   suede: { roughness: 0.96, metalness: 0, clearcoat: 0, clearcoatRoughness: 0.6, iridescence: 0, sheen: 0.45, env: 0.35 },
   patent: { roughness: 0.16, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.05, iridescence: 0, sheen: 0, env: 1.25 },
   metal: { roughness: 0.24, metalness: 0.92, clearcoat: 0.28, clearcoatRoughness: 0.18, iridescence: 0, sheen: 0, env: 1.15 },
@@ -89,7 +89,7 @@ export function toPhysical(src: THREE.Material, plane: THREE.Plane) {
     mat.map = standard.map;
     mat.normalMap = standard.normalMap;
     if (standard.normalScale) mat.normalScale.copy(standard.normalScale);
-    mat.aoMap = standard.aoMap;
+    mat.aoMap = null;
     mat.roughness = standard.roughness;
     mat.metalness = standard.metalness;
     mat.side = standard.side;

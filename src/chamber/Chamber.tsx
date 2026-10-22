@@ -20,34 +20,6 @@ import { money, pairPrice, partPrice, selectionPrice, sizeAdd, SIZES } from "./p
 import { PRESETS } from "./presets";
 import { useChamber, writeStudy, type CameraPreset } from "./store";
 
-const CHAPTERS = [
-  {
-    kicker: "01",
-    title: "Hold",
-    body: "Not a product page. One shoe, held in a dark room.",
-  },
-  {
-    kicker: "02",
-    title: "Seam",
-    body: "Midsole, outsole, stitch. The sole is a stack of decisions.",
-  },
-  {
-    kicker: "03",
-    title: "Mark",
-    body: "The beam drops. Everything but the swoosh steps back.",
-  },
-  {
-    kicker: "04",
-    title: "Pigment",
-    body: "Colour sits in the leather. It is not a filter laid over a photo.",
-  },
-  {
-    kicker: "05",
-    title: "Bench",
-    body: "Draw the knife. The last — the form inside the shoe — is still in there.",
-  },
-];
-
 const CAMERAS: { id: CameraPreset; label: string }[] = [
   { id: "three", label: "3/4" },
   { id: "side", label: "Side" },
@@ -61,13 +33,6 @@ function drift(value: number) {
   if (value === 0) return "";
   const body = money(Math.abs(value));
   return value > 0 ? `+${body}` : `−${body}`;
-}
-
-function chapterIndex(progress: number) {
-  const breaks = [0, 0.2, 0.42, 0.64, 0.82];
-  let index = 0;
-  for (let i = 0; i < breaks.length; i += 1) if (progress >= breaks[i]) index = i;
-  return index;
 }
 
 function hasWebGL() {
@@ -98,7 +63,7 @@ class StageBoundary extends Component<{ children: ReactNode }, { message: string
       return (
         <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
           <p className="max-w-sm font-mono text-sm text-bone">
-            The chamber could not open. {this.state.message}
+            The view did not start. {this.state.message}
           </p>
         </div>
       );
@@ -112,7 +77,7 @@ export function Chamber() {
   const bar = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const progressRef = useRef(0);
-  const [chapter, setChapter] = useState(0);
+  const [ready, setReady] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [webgl, setWebgl] = useState(true);
   const [hidden, setHidden] = useState(false);
@@ -128,7 +93,6 @@ export function Chamber() {
   const future = useChamber((s) => s.future.length);
   const notice = useChamber((s) => s.notice);
   const reduced = useChamber((s) => s.reduced);
-  const edited = useChamber((s) => s.edited);
   const size = useChamber((s) => s.size);
   const cartCount = useChamber((s) => s.cart.reduce((sum, line) => sum + line.qty, 0));
   const cartOpen = useChamber((s) => s.cartOpen);
@@ -140,11 +104,10 @@ export function Chamber() {
     setWebgl(hasWebGL());
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const narrow = window.matchMedia("(max-width: 760px)");
-    const short = window.matchMedia("(max-height: 780px)");
     useChamber.getState().setReduced(motion.matches);
     useChamber.getState().hydrateCart();
     useChamber.getState().hydrateStudy();
-    setSheet(!narrow.matches && !short.matches);
+    setSheet(!narrow.matches);
     const onMotion = () => useChamber.getState().setReduced(motion.matches);
     const onHide = () => setHidden(document.hidden);
     motion.addEventListener("change", onMotion);
@@ -189,7 +152,10 @@ export function Chamber() {
       const store = useChamber.getState();
       const onSlider = target?.getAttribute("role") === "slider";
       if (event.key === "b") store.setMode("bench", progressRef.current);
-      if (event.key === "p") store.setMode("pass");
+      if (event.key === "p") {
+        store.setMode("pass");
+        scroller.current?.scrollTo({ top: 0, behavior: store.reduced ? "auto" : "smooth" });
+      }
       if (event.key === "m" && store.mode === "bench") setSheet((open) => !open);
       if (event.key === "c") {
         const next = !store.cartOpen;
@@ -265,19 +231,19 @@ export function Chamber() {
     const next = max > 0 ? el.scrollTop / max : 0;
     progressRef.current = next;
     if (bar.current) bar.current.style.transform = `scaleX(${next})`;
-    const index = chapterIndex(next);
-    setChapter((current) => (current === index ? current : index));
+    const done = next > 0.94;
+    setReady((current) => (current === done ? current : done));
   }
 
-  function goToChapter(index: number) {
+  function leaveBench() {
+    useChamber.getState().setMode("pass");
     const el = scroller.current;
     if (!el) return;
-    useChamber.getState().setMode("pass");
-    const max = el.scrollHeight - el.clientHeight;
-    el.scrollTo({
-      top: (index / (CHAPTERS.length - 1)) * max,
-      behavior: reduced ? "auto" : "smooth",
-    });
+    el.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+  }
+
+  function openBench() {
+    useChamber.getState().setMode("bench", progressRef.current);
   }
 
   function edit(patch: Partial<PartStyle>) {
@@ -367,7 +333,6 @@ export function Chamber() {
   const total = pairPrice(design, prints, size);
   const base = pairPrice(PRESETS[0], false, 9);
   const delta = total - base;
-  const chapterCopy = CHAPTERS[chapter];
 
   return (
     <div
@@ -385,46 +350,24 @@ export function Chamber() {
           </StageBoundary>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
-            <p className="max-w-sm font-mono text-sm text-steel">
-              {mounted
-                ? "This browser cannot open the chamber. WebGL is required."
-                : "Opening the chamber."}
+            <p className="max-w-sm text-sm text-steel">
+              {mounted ? "WebGL is required." : "Opening"}
             </p>
           </div>
         )}
         <div className="vignette" />
 
-        <header className="absolute inset-x-0 top-0 z-20 flex flex-wrap items-start justify-between gap-3 px-4 py-4 md:px-8 md:py-6">
+        <header className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 px-5 py-4 md:px-8">
           <div>
-            <p className="font-display text-2xl leading-none tracking-tight text-bone md:text-3xl">CHAMBER</p>
-            <p className="mt-1 font-mono text-xs tracking-widest text-steel uppercase">A last, held in light</p>
+            <p className="wordmark text-bone">Chamber</p>
+            {mode === "pass" && !ready && <p className="eyebrow">Scroll</p>}
           </div>
           <div className="flex gap-2">
-            <button
-              type="button"
-              className={mode === "pass" ? "mode-btn mode-btn-on" : "mode-btn"}
-              onClick={() => useChamber.getState().setMode("pass")}
-              aria-pressed={mode === "pass"}
-            >
-              Pass
-            </button>
-            <button
-              type="button"
-              className={mode === "bench" ? "mode-btn mode-btn-on" : "mode-btn"}
-              onClick={() => useChamber.getState().setMode("bench", progressRef.current)}
-              aria-pressed={mode === "bench"}
-            >
-              Bench
-            </button>
-            <button
-              type="button"
-              className="mode-btn"
-              onClick={openCart}
-              aria-label={`Current pair ${money(total)}. Open the cart.`}
-            >
-              {money(total)}
-              {delta !== 0 ? ` ${drift(delta)}` : ""}
-            </button>
+            {mode === "bench" && (
+              <button type="button" className="mode-btn" onClick={leaveBench}>
+                Pass
+              </button>
+            )}
             <button
               type="button"
               className={cartOpen ? "mode-btn mode-btn-on" : "mode-btn"}
@@ -436,49 +379,10 @@ export function Chamber() {
           </div>
         </header>
 
-        {mode === "pass" && (
-          <div className="pointer-events-none absolute inset-0 z-10 flex items-end px-4 pb-8 md:items-center md:px-8 md:pb-0">
-            <div className="pointer-events-auto w-full max-w-sm">
-              <div className="mb-5 flex gap-2">
-                {CHAPTERS.map((item, index) => (
-                  <button
-                    key={item.kicker}
-                    type="button"
-                    className={index === chapter ? "tick tick-on" : "tick"}
-                    onClick={() => goToChapter(index)}
-                    aria-label={`Chapter ${item.title}`}
-                    aria-current={index === chapter ? "step" : undefined}
-                  />
-                ))}
-              </div>
-              <p className="font-mono text-xs tracking-widest text-heat uppercase">{chapterCopy.kicker}</p>
-              <h1 className="font-display mt-1 text-5xl leading-none text-balance text-bone md:text-7xl">
-                {chapterCopy.title}
-              </h1>
-              <p className="mt-4 max-w-xs text-pretty font-mono text-sm leading-relaxed text-bone/80">
-                {chapterCopy.body}
-              </p>
-              {chapter === 0 && (
-                <p className="mt-6 font-mono text-xs tracking-widest text-steel uppercase">
-                  Scroll, or Page Down
-                </p>
-              )}
-              {edited && (
-                <p className="mt-4 max-w-xs font-mono text-xs leading-relaxed text-heat">
-                  Colour kept from the bench · {design.name} · {money(total)}
-                </p>
-              )}
-              {chapter === CHAPTERS.length - 1 && (
-                <button
-                  type="button"
-                  className="mode-btn mode-btn-on mt-6"
-                  onClick={() => useChamber.getState().setMode("bench", progressRef.current)}
-                >
-                  Open the bench
-                </button>
-              )}
-            </div>
-          </div>
+        {mode === "pass" && ready && (
+          <button type="button" className="mode-btn mode-btn-on end-action" onClick={openBench}>
+            Bench
+          </button>
         )}
 
         <Knife
@@ -487,59 +391,51 @@ export function Chamber() {
         />
 
         {opening && (
-          <p className="pointer-events-none absolute bottom-36 left-1/2 z-20 -translate-x-1/2 font-mono text-xs tracking-widest text-steel uppercase">
+          <p className="pointer-events-none absolute top-20 left-5 z-20 text-xs text-steel md:left-8">
             Opening {Math.round(progress)}%
           </p>
         )}
 
         <Cart />
 
-        {mode === "bench" && !sheet && (
+        {mode === "bench" && !sheet && style && (
           <div className="rail">
             <button type="button" className="chip chip-on" aria-expanded={false} onClick={toggleSheet}>
               Edit
             </button>
-            <p className="min-w-0 font-mono text-xs text-bone">
-              <span className="text-heat">{money(selPrice)}</span>
-              <span className="text-steel"> {partLabel}</span>
-              <span> · {money(total)}</span>
-              {delta !== 0 && <span className="text-heat"> {drift(delta)}</span>}
+            <span className="swatch" style={{ background: style.color }} />
+            <p className="min-w-0 text-sm text-bone">
+              {partLabel}
+              <span className="text-steel"> {money(total)}</span>
             </p>
-            <button type="button" className="chip" onClick={addPair}>
-              Add · US {size}
-            </button>
-            {notice && (
-              <p className="basis-full font-mono text-xs text-heat" role="status">
-                {notice}
-              </p>
-            )}
           </div>
         )}
 
         {mode === "bench" && sheet && (
-          <div className="absolute inset-x-0 bottom-0 z-20 px-3 pb-3 md:px-6 md:pb-5">
-            <div className="dock">
+          <div className="absolute inset-x-0 bottom-0 z-20 px-3 pr-16 pb-3 md:px-8 md:pr-20 md:pb-5">
+            <div className="instrument">
               <div className="dock-head">
-                <div className="min-w-36 flex-1">
-                  <p className="truncate font-mono text-sm text-bone">{design.name}</p>
-                  <p className="truncate font-mono text-xs text-steel">
-                    <span className="text-bone">{partLabel}</span>{" "}
-                    <span className="text-heat">{money(selPrice)}</span>
-                    <span> · Pair {money(total)}</span>
-                    {delta !== 0 && <span className="text-heat"> {drift(delta)}</span>}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm text-bone">{design.name}</p>
+                  <p className="truncate text-xs text-steel">
+                    {partLabel}
+                    {isolated ? " isolated" : ""}
                   </p>
                 </div>
+                <p className="text-sm text-bone">{money(total)}</p>
                 <button type="button" className="chip" aria-expanded onClick={toggleSheet}>
                   <ChevronDown />
-                  Minimize
+                  Hide
                 </button>
                 <button type="button" className="chip chip-on" onClick={addPair}>
-                  Add · US {size}
+                  Add
                 </button>
               </div>
 
               {style && (
-                <div className="dock-body">
+                <div className="inst-scroll">
+                  <div className="inst-group">
+                    <p className="inst-label">Material</p>
                   <div className="flex items-center gap-2 overflow-x-auto">
                     {PRESETS.map((preset, index) => (
                       <button
@@ -583,29 +479,31 @@ export function Chamber() {
                           onClick={() => useChamber.getState().select([id])}
                         >
                           {LABELS[id]}
-                          <span className="text-heat">{money(partPrice(design.parts[id], id))}</span>
+                          <span className="text-steel">{money(partPrice(design.parts[id], id))}</span>
                         </button>
                       );
                     })}
                   </div>
+                  </div>
+                  <div className="inst-group">
+                    <p className="inst-label">Colour</p>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="min-w-28 font-mono text-sm text-bone">
+                    <p className="min-w-28 text-sm text-bone">
                       {partLabel}
-                      <span className="text-heat"> {money(selPrice)}</span>
-                      {isolated ? " · isolated" : ""}
+                      <span className="text-steel"> {money(selPrice)}</span>
                     </p>
                     {SWATCHES.map((swatch) => (
                       <button
                         key={swatch}
                         type="button"
-                        className="swatch-btn"
+                        className={style.color.toLowerCase() === swatch ? "swatch-btn swatch-on" : "swatch-btn"}
                         style={{ background: swatch }}
                         aria-label={`Colour ${swatch}`}
                         onClick={() => edit({ color: swatch })}
                       />
                     ))}
-                    <label className="font-mono text-xs tracking-widest text-steel uppercase">
-                      Colour
+                    <label className="text-xs tracking-widest text-steel uppercase">
+                      Mix
                       <input
                         className="ml-2 h-11 w-14 cursor-pointer bg-transparent"
                         type="color"
@@ -617,45 +515,53 @@ export function Chamber() {
                       />
                     </label>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {FINISHES.map((finish) => (
-                      <button
-                        key={finish}
-                        type="button"
-                        className={style.finish === finish ? "chip chip-on" : "chip"}
-                        onClick={() => edit({ finish: finish as Finish })}
-                      >
-                        {finish}
-                      </button>
-                    ))}
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {TREATMENTS.map((treatment) => (
-                      <button
-                        key={treatment}
-                        type="button"
-                        className={style.treatment === treatment ? "chip chip-on" : "chip"}
-                        onClick={() => edit({ treatment: treatment as Treatment })}
-                      >
-                        {treatment}
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      className={prints ? "chip chip-on" : "chip"}
-                      onClick={() => useChamber.getState().setPrints(!prints)}
-                      aria-pressed={prints}
-                    >
-                      Prints
-                    </button>
-                    {isolated && (
-                      <button type="button" className="chip" onClick={() => useChamber.getState().isolate(null)}>
-                        Release
-                      </button>
-                    )}
+                  <div className="inst-group">
+                    <p className="inst-label">Surface</p>
+                    <div className="flex flex-wrap gap-2">
+                      {FINISHES.map((finish) => (
+                        <button
+                          key={finish}
+                          type="button"
+                          className={style.finish === finish ? "chip chip-on" : "chip"}
+                          onClick={() => edit({ finish: finish as Finish })}
+                        >
+                          {finish}
+                        </button>
+                      ))}
+                    </div>
                   </div>
+                  <div className="inst-group">
+                    <p className="inst-label">Treatment</p>
+                    <div className="flex flex-wrap gap-2">
+                      {TREATMENTS.map((treatment) => (
+                        <button
+                          key={treatment}
+                          type="button"
+                          className={style.treatment === treatment ? "chip chip-on" : "chip"}
+                          onClick={() => edit({ treatment: treatment as Treatment })}
+                        >
+                          {treatment}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        className={prints ? "chip chip-on" : "chip"}
+                        onClick={() => useChamber.getState().setPrints(!prints)}
+                        aria-pressed={prints}
+                      >
+                        Prints
+                      </button>
+                      {isolated && (
+                        <button type="button" className="chip" onClick={() => useChamber.getState().isolate(null)}>
+                          Release
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="inst-group">
+                    <p className="inst-label">Size</p>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-mono text-xs tracking-widest text-steel uppercase">Size</p>
                     {SIZES.map((item) => (
                       <button
                         key={item}
@@ -669,6 +575,9 @@ export function Chamber() {
                       </button>
                     ))}
                   </div>
+                  </div>
+                  <div className="inst-group">
+                    <p className="inst-label">View</p>
                   <div className="flex flex-wrap gap-2">
                     {CAMERAS.map((item) => (
                       <button
@@ -708,10 +617,19 @@ export function Chamber() {
                       <Maximize2 />
                     </IconButton>
                   </div>
-                  <p className="font-mono text-xs text-steel">
-                    Each panel has its own price. Minimize hides this bench. Page Up and Page Down still move the pass.
-                    M hides the panel. Colour stays when you go back to Pass.
-                  </p>
+                  </div>
+                  <div className="inst-group">
+                    <div className="price-row">
+                      <p className="inst-label">Price</p>
+                      <p className="text-sm text-bone">
+                        {money(total)}
+                        {delta !== 0 ? ` ${drift(delta)}` : ""}
+                      </p>
+                    </div>
+                    <p className="text-xs text-steel">
+                      {partLabel} {money(selPrice)}. US {size}.
+                    </p>
+                  </div>
                 </div>
               )}
               {notice && (
@@ -779,7 +697,7 @@ function Knife({ value, onChange }: { value: number; onChange: (value: number) =
         ref={track}
         role="slider"
         tabIndex={0}
-        aria-label="Draw the light knife"
+        aria-label="Knife"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(value * 100)}
