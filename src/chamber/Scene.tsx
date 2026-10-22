@@ -95,7 +95,12 @@ function Rig({
   const cameraPreset = useChamber((s) => s.camera);
   const cameraNonce = useChamber((s) => s.cameraNonce);
   const lighting = useChamber((s) => s.lighting);
+  const inspection = useChamber((s) => s.inspection);
   const { camera, gl } = useThree();
+
+  useEffect(() => {
+    if (spot.current) spot.current.castShadow = !inspection;
+  }, [inspection]);
 
   useEffect(() => {
     registerShot(() => gl.domElement.toDataURL("image/png"));
@@ -124,6 +129,11 @@ function Rig({
     if (presentation.current) {
       presentation.current.position.x = THREE.MathUtils.damp(presentation.current.position.x, 0, lambda, d);
       presentation.current.position.y = THREE.MathUtils.damp(presentation.current.position.y, lift + bob, lambda, d);
+      if (chamber.mode === "bench" && chamber.turntable && !reduced) {
+        presentation.current.rotation.y += d * 0.34;
+      } else {
+        presentation.current.rotation.y = THREE.MathUtils.damp(presentation.current.rotation.y, 0, 5, d);
+      }
     }
     if (floor.current) floor.current.position.y = -(fit.halfY || 0.7) - 0.02;
 
@@ -151,7 +161,15 @@ function Rig({
 
     if (key.current) key.current.intensity = (chamber.mode === "pass" ? 1.7 : 1.45) * chamber.lighting;
     if (rim.current) rim.current.intensity = 0.32 * chamber.lighting;
-    if (spot.current) spot.current.intensity = 26 * chamber.lighting;
+    if (spot.current) {
+      spot.current.intensity = 26 * chamber.lighting;
+      if (chamber.mode === "bench" && chamber.inspection && !reduced) {
+        const sweep = state.clock.elapsedTime * 0.62;
+        spot.current.position.set(Math.sin(sweep) * 3.6, 5.1, Math.cos(sweep) * 3.2);
+      } else {
+        spot.current.position.set(0.2, 7.4, 2.6);
+      }
+    }
     if (hemi.current) hemi.current.intensity = 0.28 * chamber.lighting;
   });
 
