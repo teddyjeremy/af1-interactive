@@ -420,6 +420,7 @@ export function Chamber() {
                         onBlur={() => useChamber.getState().endEdit()}
                       />
                     </label>
+                    <button type="button" className="chip" onClick={() => useChamber.getState().applyColorToAll(style.color)}>Apply colour to all</button>
                   </div>
                   </div>
                   <div className="inst-group">
