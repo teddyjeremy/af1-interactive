@@ -34,7 +34,7 @@ function Shoe({ progress, designIndex, customColors, selectedPart, onParts, onSe
   progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null;
   onParts: (parts: PartInfo[]) => void; onSelectPart: (name: string) => void; onReady: (ready: boolean) => void; interactive?: boolean
 }) {
-  const { scene } = useGLTF('/models/nike%20shoes.glb')
+  const { scene } = useGLTF('https://raw.githubusercontent.com/teddyjeremy/af1-interactive/main/models/nike%20shoes.glb')
   const group = useRef<THREE.Group>(null)
   const prepared = useMemo(() => {
     const copy = scene.clone(true)
@@ -135,7 +135,7 @@ export default function Experience({ progress, designIndex, customColors, select
   progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null;
   onParts: (parts: PartInfo[]) => void; onSelectPart: (name: string) => void; onReady: (ready: boolean) => void; interactive?: boolean
 }) {
-  const { scene } = useGLTF('/models/nike%20shoes.glb')
+  const { scene } = useGLTF('https://raw.githubusercontent.com/teddyjeremy/af1-interactive/main/models/nike%20shoes.glb')
   const cameraDistance = useMemo(() => {
     const bounds = new THREE.Box3().setFromObject(scene)
     const size = bounds.getSize(new THREE.Vector3())
@@ -175,4 +175,4 @@ export default function Experience({ progress, designIndex, customColors, select
     />
   </Canvas>
 }
-useGLTF.preload('/models/nike%20shoes.glb')
+useGLTF.preload('https://raw.githubusercontent.com/teddyjeremy/af1-interactive/main/models/nike%20shoes.glb')
