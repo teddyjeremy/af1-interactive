@@ -400,7 +400,7 @@ export function Chamber() {
               <p className="story-description">{[
                 "The Air Force 1. A timeless silhouette, ready for a new point of view. Start with the details.",
                 "Premium textures, considered details, and a profile that never needs an introduction.",
-                "Every layer lifts into the light, takes a full turn, then locks back into its unmistakable shape.",
+                "A closer look at the layers, materials and silhouette that make the AF1 unmistakable.",
                 "Go tonal, go bold, or build a colour story that is entirely yours.",
                 "Choose your colourway, finish, texture and size. Your pair, your call.",
               ][storyStage]}</p>
