@@ -1,6 +1,6 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { useProgress } from "@react-three/drei";
-import { Box, Camera, ChevronDown, Download, Eye, Layers, Link2, Maximize2, Redo2, RotateCcw, ScanLine, Sun, Undo2, Upload } from "lucide-react";
+import { Camera, ChevronDown, Download, Link2, Maximize2, Redo2, RotateCcw, Undo2, Upload } from "lucide-react";
 import { Cart } from "./Cart";
 import { Scene } from "./Scene";
 import { takeShot } from "./shot";
@@ -78,6 +78,7 @@ export function Chamber() {
   const fileRef = useRef<HTMLInputElement>(null);
   const progressRef = useRef(0);
   const [ready, setReady] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [webgl, setWebgl] = useState(true);
   const [hidden, setHidden] = useState(false);
@@ -88,13 +89,6 @@ export function Chamber() {
   const isolated = useChamber((s) => s.isolated);
   const prints = useChamber((s) => s.prints);
   const knife = useChamber((s) => s.knife);
-  const explosion = useChamber((s) => s.explosion);
-  const wireframe = useChamber((s) => s.wireframe);
-  const hiddenParts = useChamber((s) => s.hiddenParts);
-  const lighting = useChamber((s) => s.lighting);
-  const turntable = useChamber((s) => s.turntable);
-  const inspection = useChamber((s) => s.inspection);
-  const compareOriginal = useChamber((s) => s.compareOriginal);
   const camera = useChamber((s) => s.camera);
   const past = useChamber((s) => s.past.length);
   const future = useChamber((s) => s.future.length);
@@ -237,6 +231,7 @@ export function Chamber() {
     const max = el.scrollHeight - el.clientHeight;
     const next = max > 0 ? el.scrollTop / max : 0;
     progressRef.current = next;
+    setScrollProgress((current) => Math.abs(current - next) > 0.012 || next === 0 || next === 1 ? next : current);
     if (bar.current) bar.current.style.transform = `scaleX(${next})`;
     const done = next > 0.94;
     setReady((current) => (current === done ? current : done));
@@ -340,7 +335,7 @@ export function Chamber() {
   const total = pairPrice(design, prints, size);
   const base = pairPrice(PRESETS[0], false, 9);
   const delta = total - base;
-  const selectionHidden = selected.length > 0 && selected.every((id) => hiddenParts.includes(id));
+  const storyStage = scrollProgress < 0.18 ? 0 : scrollProgress < 0.38 ? 1 : scrollProgress < 0.58 ? 2 : scrollProgress < 0.79 ? 3 : 4;
 
   return (
     <div
@@ -387,16 +382,52 @@ export function Chamber() {
           </div>
         </header>
 
+        {mode === "pass" && (
+          <div className={`story-overlay story-stage-${storyStage}`} aria-live="polite">
+            <div className="story-kicker">
+              <span className="story-live-dot" />
+              <span>{["THE ORIGINAL / 1982", "MATERIAL STUDY / 01", "FORM & FUNCTION / 02", "COLOUR IN MOTION / 03", "YOUR PAIR / 04"][storyStage]}</span>
+            </div>
+            <div key={storyStage} className="story-copy">
+              <p className="story-index">0{storyStage + 1} <span>/ 05</span></p>
+              <h1>{[
+                <>A legend.<br /><em>Unboxed.</em></>,
+                <>Made to<br /><em>move.</em></>,
+                <>Every line<br /><em>has a reason.</em></>,
+                <>Colour<br /><em>changes everything.</em></>,
+                <>Make it<br /><em>your own.</em></>,
+              ][storyStage]}</h1>
+              <p className="story-description">{[
+                "An icon of the court, reimagined as an immersive 3D study. Take your time. Look closer.",
+                "Follow the silhouette as the camera moves around the leather, stitching, and unmistakable shape.",
+                "Watch the construction come apart, then settle back into place. Nothing is hidden from the light.",
+                "A new colourway, a new attitude. The materials shift as you move through the story.",
+                "You have seen the form. Now make it yours in the custom studio.",
+              ][storyStage]}</p>
+            </div>
+            <div className="story-footer">
+              <div className="story-steps" aria-label={`Story section ${storyStage + 1} of 5`}>
+                {[0, 1, 2, 3, 4].map((step) => (
+                  <button key={step} type="button" className={step === storyStage ? "story-step story-step-active" : "story-step"} aria-label={`Go to story section ${step + 1}`} onClick={() => {
+                    const node = scroller.current;
+                    if (!node) return;
+                    const max = Math.max(0, node.scrollHeight - node.clientHeight);
+                    node.scrollTo({ top: max * [0, 0.25, 0.5, 0.75, 1][step], behavior: reduced ? "auto" : "smooth" });
+                  }} />
+                ))}
+              </div>
+              <span className="story-counter">SCROLL TO EXPLORE <span>↓</span></span>
+            </div>
+          </div>
+        )}
+
         {mode === "pass" && ready && (
           <button type="button" className="mode-btn mode-btn-on end-action" onClick={openBench}>
             Bench
           </button>
         )}
 
-        <Knife
-          value={knife}
-          onChange={(value) => useChamber.getState().setKnife(value)}
-        />
+        {mode === "bench" && <Knife value={knife} onChange={(value) => useChamber.getState().setKnife(value)} />}
 
         {opening && (
           <p className="pointer-events-none absolute top-20 left-5 z-20 text-xs text-steel md:left-8">
@@ -566,48 +597,6 @@ export function Chamber() {
                         </button>
                       )}
                     </div>
-                  </div>
-                  <div className="inst-group construction-tools">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="inst-label">Construction lab</p>
-                      <span className="text-xs text-steel">REAL MESH PANELS</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button type="button" className={explosion > 0 ? "chip chip-on" : "chip"} onClick={() => useChamber.getState().setExplosion(1)} aria-pressed={explosion > 0}>
-                        <Box /> Explode
-                      </button>
-                      <button type="button" className={explosion === 0 ? "chip chip-on" : "chip"} onClick={() => useChamber.getState().setExplosion(0)} aria-pressed={explosion === 0}>
-                        <Layers /> Assemble
-                      </button>
-                      <button type="button" className={wireframe ? "chip chip-on" : "chip"} onClick={() => useChamber.getState().setWireframe(!wireframe)} aria-pressed={wireframe}>
-                        <ScanLine /> Blueprint
-                      </button>
-                      <button type="button" className="chip" onClick={() => useChamber.getState().togglePartsVisibility(selected)} disabled={!selected.length}>
-                        <Eye /> {selectionHidden ? "Show selection" : "Hide selection"}
-                      </button>
-                      <button type="button" className="chip" onClick={() => useChamber.getState().showAllParts()} disabled={!hiddenParts.length && !isolated}>
-                        Show all
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button type="button" className={turntable ? "chip chip-on" : "chip"} onClick={() => useChamber.getState().setTurntable(!turntable)} aria-pressed={turntable}>
-                        Turntable
-                      </button>
-                      <button type="button" className={inspection ? "chip chip-on" : "chip"} onClick={() => useChamber.getState().setInspection(!inspection)} aria-pressed={inspection}>
-                        Light sweep
-                      </button>
-                      <button type="button" className={compareOriginal ? "chip chip-on" : "chip"} onClick={() => useChamber.getState().setCompareOriginal(!compareOriginal)} aria-pressed={compareOriginal}>
-                        {compareOriginal ? "Showing original" : "Compare original"}
-                      </button>
-                    </div>
-                    <label className="construction-range">
-                      <span><span>Explosion intensity</span><span className="text-steel">{Math.round(explosion * 100)}%</span></span>
-                      <input type="range" min={0} max={1} step={0.01} value={explosion} onChange={(event) => useChamber.getState().setExplosion(Number(event.target.value))} aria-label="Explosion intensity" />
-                    </label>
-                    <label className="construction-range">
-                      <span><span><Sun className="inline-icon" /> Studio light</span><span className="text-steel">{Math.round(lighting * 100)}%</span></span>
-                      <input type="range" min={0.4} max={1.5} step={0.05} value={lighting} onChange={(event) => useChamber.getState().setLighting(Number(event.target.value))} aria-label="Studio lighting intensity" />
-                    </label>
                   </div>
                   <div className="inst-group">
                     <p className="inst-label">Size</p>
