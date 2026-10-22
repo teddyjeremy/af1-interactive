@@ -29,6 +29,7 @@ try {
     await page.getByText(label, { exact: true }).first().waitFor({ state: "visible", timeout: 5000 });
   }
 
+  await page.getByRole("button", { name: /Random colourway/ }).click({ force: true });
   await page.getByRole("button", { name: "suede", exact: true }).click({ force: true });
   await page.getByRole("button", { name: "Add to bag", exact: true }).click({ force: true });
   await page.getByRole("dialog", { name: "Your shopping bag" }).waitFor({ state: "visible", timeout: 5000 });
@@ -41,10 +42,10 @@ try {
   await page.getByText(/No payment is taken in this concept store/).waitFor({ state: "visible", timeout: 5000 });
 
   await page.getByRole("button", { name: "Back to customising", exact: true }).click({ force: true });
-  await page.getByRole("button", { name: "Overview", exact: true }).click({ force: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(300);
   await page.getByText("AF1 STUDIO", { exact: false }).first().waitFor({ state: "visible", timeout: 5000 });
+  await page.getByRole("button", { name: /Random colourway/ }).waitFor({ state: "visible", timeout: 5000 });
   const dimensions = await page.evaluate(() => ({
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,
