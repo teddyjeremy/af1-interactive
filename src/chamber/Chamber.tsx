@@ -347,14 +347,14 @@ export function Chamber() {
         <div ref={bar} className="progress-bar" />
         {mounted && webgl ? (
           <StageBoundary>
-            <div className="absolute inset-0">
+            <div className={mode === "bench" && sheet ? "absolute inset-y-0 left-0 right-0 md:right-[430px]" : "absolute inset-0"}>
               <Scene progressRef={progressRef} hidden={hidden} />
             </div>
           </StageBoundary>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
             <p className="max-w-sm text-sm text-steel">
-              {mounted ? "This experience needs WebGL enabled." : "Preparing your studio"}
+              {mounted ? "This experience needs WebGL enabled." : "Loading the 3D studio"}
             </p>
           </div>
         )}
@@ -391,18 +391,18 @@ export function Chamber() {
             <div key={storyStage} className="story-copy">
               <p className="story-index">0{storyStage + 1} <span>/ 05</span></p>
               <h1>{[
-                <>An icon.<br /><em>Rewritten.</em></>,
-                <>Made for<br /><em>your world.</em></>,
-                <>Look closer.<br /><em>Feel more.</em></>,
-                <>Your colour.<br /><em>Your rules.</em></>,
-                <>One icon.<br /><em>Your signature.</em></>,
+                <>An icon<br /><em>Reworked</em></>,
+                <>Made for<br /><em>your world</em></>,
+                <>Look closer<br /><em>Feel more</em></>,
+                <>Your colour<br /><em>Your rules</em></>,
+                <>One icon<br /><em>Your signature</em></>,
               ][storyStage]}</h1>
               <p className="story-description">{[
-                "The Air Force 1. A timeless silhouette, ready for a new point of view. Start with the details.",
-                "Premium textures, considered details, and a profile that never needs an introduction.",
-                "A closer look at the layers, materials and silhouette that make the AF1 unmistakable.",
-                "Go tonal, go bold, or build a colour story that is entirely yours.",
-                "Choose your colourway, finish, texture and size. Your pair, your call.",
+                "The Air Force 1 is a timeless silhouette, ready for your point of view",
+                "Premium textures, considered details and a profile that needs no introduction",
+                "Explore the layers, materials and silhouette that make the AF1 unmistakable",
+                "Go tonal, go bold or build a colour story that feels like you",
+                "Choose your colourway, finish, texture and size to make the pair your own",
               ][storyStage]}</p>
             </div>
             <div className="story-footer">
@@ -431,7 +431,7 @@ export function Chamber() {
 
         {opening && (
           <p className="pointer-events-none absolute top-20 left-5 z-20 text-xs text-steel md:left-8">
-            Getting things ready {Math.round(progress)}%
+            Loading the 3D shoe {Math.round(progress)}%
           </p>
         )}
 
@@ -475,21 +475,7 @@ export function Chamber() {
               {style && (
                 <div className="inst-scroll">
                   <div className="inst-group">
-                    <div className="price-row">
-                      <p className="inst-label">A closer look</p>
-                      <span className="text-xs text-steel">A short reveal</span>
-                    </div>
-                    <p className="max-w-lg text-xs leading-relaxed text-steel">
-                      See the layers lift apart, turn gently, and settle back into the original silhouette.
-                    </p>
-                    <div>
-                      <button type="button" className="chip chip-on" onClick={() => useChamber.getState().playBuildSequence()}>
-                        <RotateCcw /> Reveal the details
-                      </button>
-                    </div>
-                  </div>
-                  <div className="inst-group">
-                    <p className="inst-label">Colourway</p>
+                    <p className="inst-label">Choose a colourway</p>
                   <div className="flex items-center gap-2 overflow-x-auto">
                     {PRESETS.map((preset, index) => (
                       <button
@@ -571,7 +557,7 @@ export function Chamber() {
                   </div>
                   </div>
                   <div className="inst-group">
-                    <p className="inst-label">Finish</p>
+                    <p className="inst-label">Material finish</p>
                     <div className="flex flex-wrap gap-2">
                       {FINISHES.map((finish) => (
                         <button
@@ -586,7 +572,7 @@ export function Chamber() {
                     </div>
                   </div>
                   <div className="inst-group">
-                    <p className="inst-label">Texture</p>
+                    <p className="inst-label">Details</p>
                     <div className="flex flex-wrap gap-2">
                       {TREATMENTS.map((treatment) => (
                         <button
@@ -631,7 +617,7 @@ export function Chamber() {
                   </div>
                   </div>
                   <div className="inst-group">
-                    <p className="inst-label">Angle</p>
+                    <p className="inst-label">View your pair</p>
                   <div className="flex flex-wrap gap-2">
                     {CAMERAS.map((item) => (
                       <button
@@ -681,7 +667,7 @@ export function Chamber() {
                       </p>
                     </div>
                     <p className="text-xs text-steel">
-                      {partLabel} {money(selPrice)}. US {size}.
+                      {partLabel} {money(selPrice)}. US {size}
                     </p>
                   </div>
                 </div>
