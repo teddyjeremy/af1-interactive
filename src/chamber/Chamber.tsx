@@ -78,7 +78,7 @@ export function Chamber() {
   const fileRef = useRef<HTMLInputElement>(null);
   const progressRef = useRef(0);
   const [ready, setReady] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const [storyStage, setStoryStage] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [webgl, setWebgl] = useState(true);
   const [hidden, setHidden] = useState(false);
@@ -231,7 +231,8 @@ export function Chamber() {
     const max = el.scrollHeight - el.clientHeight;
     const next = max > 0 ? el.scrollTop / max : 0;
     progressRef.current = next;
-    setScrollProgress((current) => Math.abs(current - next) > 0.012 || next === 0 || next === 1 ? next : current);
+    const nextStage = next < 0.18 ? 0 : next < 0.38 ? 1 : next < 0.58 ? 2 : next < 0.79 ? 3 : 4;
+    setStoryStage((current) => current === nextStage ? current : nextStage);
     if (bar.current) bar.current.style.transform = `scaleX(${next})`;
     const done = next > 0.94;
     setReady((current) => (current === done ? current : done));
@@ -335,7 +336,6 @@ export function Chamber() {
   const total = pairPrice(design, prints, size);
   const base = pairPrice(PRESETS[0], false, 9);
   const delta = total - base;
-  const storyStage = scrollProgress < 0.18 ? 0 : scrollProgress < 0.38 ? 1 : scrollProgress < 0.58 ? 2 : scrollProgress < 0.79 ? 3 : 4;
 
   return (
     <div
