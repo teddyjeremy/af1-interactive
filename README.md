@@ -1,18 +1,15 @@
 # CHAMBER
 
-One sneaker, studied in a dark room. Scroll the pass, then open the bench.
-
-The shoe stays large. The pass moves through the original colourway, a held beam, and vermilion. At the end of the scroll, Bench appears. The same model continues onto the bench, where every named panel can be recoloured.
+One sneaker, one cinematic scroll story. Arrive to an oversized editorial introduction, then scroll to orbit the shoe, watch its panels separate and reassemble, inspect a blueprint moment, and follow a moving strip of light across the silhouette. The camera, lighting, colour study, and construction effects respond to scroll automatically. At the end, enter the custom studio and make the pair yours.
 
 ## Experience
 
-- **Pass.** Scroll, Page Up, or Page Down. The shoe sits in a three quarter view under one spotlight. Bench appears only after the scroll finishes.
+- **Scroll story.** Five editorial chapters respond to your scroll position. The shoe moves through camera angles, an exploded construction study, a blueprint interlude, a light sweep, and a final rotating hero view. Section markers let you jump between chapters.
 - **Bench.** An instrument panel with material, colour, surface, treatment, size, and price. On a phone it stays in a bottom drawer so the shoe keeps the screen. Hide collapses it to the selected panel and its colour.
 - **Pass again.** Leaving the bench returns the original shoe and the start of the scroll. Open Bench again and the last edit is still there.
 - **Study cart.** Add the pair. Checkout only logs a note. Nothing is charged.
 - **Isolate.** Double click a panel to drop everything else into shadow.
-- **Construction lab.** Explode the existing named GLB panels, smoothly assemble them, and adjust the separation amount. Blueprint wireframe, hide/show selection, show-all, and adjustable studio lighting are available in the editor.
-- **Inspection experiments.** Turntable rotation, a moving inspection-light sweep, and a non-destructive comparison against the original colourway let you inspect the form without losing your custom design.
+- **Bench.** Opens the editor after the scroll story. Recolour named panels, choose finishes and treatments, select sizes, inspect camera presets, and manage your design.
 - **Prints.** Restores the model colour maps on laces, tongue, collar, insole, and stitch.
 - **Undo, redo, reset, JSON import and export, a PNG frame, a shareable link, camera presets, fullscreen.**
 
