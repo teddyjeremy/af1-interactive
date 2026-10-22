@@ -11,10 +11,14 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: verify-chamber-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 8
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,4 +48,4 @@ jobs:
           cat /tmp/chamber-preview.log
           exit 1
       - name: Smoke-test desktop and mobile interactions
-        run: node scripts/smoke.mjs
+        run: timeout 120s node scripts/smoke.mjs
