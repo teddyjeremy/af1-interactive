@@ -37,11 +37,14 @@ try {
   await assemble.click();
   if ((await assemble.getAttribute("aria-pressed")) !== "true") throw new Error("Assemble control did not activate.");
 
-  for (const label of ["Blueprint", "Turntable", "Light sweep", "Compare original"]) {
+  for (const label of ["Blueprint", "Turntable", "Light sweep"]) {
     const control = page.getByRole("button", { name: new RegExp(label) });
     await control.click();
     if ((await control.getAttribute("aria-pressed")) !== "true") throw new Error(`${label} control did not activate.`);
   }
+  await page.getByRole("button", { name: /Compare original/ }).click();
+  const original = page.getByRole("button", { name: /Showing original/ });
+  if ((await original.getAttribute("aria-pressed")) !== "true") throw new Error("Original comparison did not activate.");
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
   mobile.on("pageerror", (error) => failures.push(error.message));
