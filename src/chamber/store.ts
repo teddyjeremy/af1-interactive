@@ -90,7 +90,7 @@ function pushHistory(past: Design[], current: Design) {
 }
 
 export const useChamber = create<ChamberState>((set, get) => ({
-  mode: "pass",
+  mode: "bench",
   design: cloneDesign(PRESETS[0]),
   past: [],
   future: [],
