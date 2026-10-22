@@ -33,3 +33,6 @@
   .camera-controls { top: 48px; left: 8px; gap: 4px; max-width: calc(100% - 16px); }
   .camera-preset { min-height: 28px; padding: 6px 7px; font-size: 7px; }
 }
+
+.effect-option:disabled { opacity: .38; cursor: not-allowed; border-style: dashed; }
+.effect-option:disabled:hover { border-color: #34322c; background: #191917; }
