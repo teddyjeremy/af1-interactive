@@ -354,7 +354,7 @@ export function Chamber() {
         ) : (
           <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
             <p className="max-w-sm text-sm text-steel">
-              {mounted ? "This experience needs WebGL enabled." : "Getting your pair ready"}
+              {mounted ? "This experience needs WebGL enabled." : "Preparing your studio"}
             </p>
           </div>
         )}
@@ -362,8 +362,8 @@ export function Chamber() {
 
         <header className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 px-5 py-4 md:px-8">
           <div>
-            <p className="wordmark text-bone">CHAMBER <span className="brand-slash">/</span> AF-1</p>
-            {mode === "pass" && !ready && <p className="eyebrow">Discover the details</p>}
+            <p className="wordmark text-bone">AF1 STUDIO <span className="brand-slash">/</span> NIKE</p>
+            {mode === "pass" && !ready && <p className="eyebrow">THE ORIGINAL. YOURS TO REWORK.</p>}
           </div>
           <div className="flex gap-2">
             {mode === "bench" && (
@@ -423,7 +423,7 @@ export function Chamber() {
 
         {mode === "pass" && ready && (
           <button type="button" className="mode-btn mode-btn-on end-action" onClick={openBench}>
-            Customise yours
+            MAKE IT YOURS
           </button>
         )}
 
