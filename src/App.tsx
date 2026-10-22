@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowDownRight, ArrowLeft, ArrowRight, Check, ChevronDown, CircleHelp, Download, Eye, Layers3, Menu, MousePointer2, Redo2, RotateCcw, Sparkles, Undo2, Upload, WandSparkles, X } from 'lucide-react'
+import { ArrowDownRight, ArrowLeft, ArrowRight, Check, ChevronDown, CircleHelp, Download, Eye, Layers3, Menu, MousePointer2, Maximize2, Minimize2, Redo2, RotateCcw, Sparkles, Undo2, Upload, WandSparkles, X } from 'lucide-react'
 import Experience, { designs, type PartInfo } from './Experience'
 
 type View = 'home' | 'customize'
@@ -28,6 +28,10 @@ export default function App() {
   const [redoStack, setRedoStack] = useState<DesignSnapshot[]>([])
   const [studioNotice, setStudioNotice] = useState('')
   const importInput = useRef<HTMLInputElement>(null)
+  const studioViewportRef = useRef<HTMLDivElement>(null)
+  const [cameraPreset, setCameraPreset] = useState('three-quarter')
+  const [cameraResetToken, setCameraResetToken] = useState(0)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const progress = useRef(0)
   const [scrollPercent, setScrollPercent] = useState(0)
   const storyRef = useRef<HTMLDivElement>(null)
@@ -48,6 +52,21 @@ export default function App() {
   useEffect(() => {
     if (view === 'customize') window.scrollTo({top:0,behavior:'smooth'})
   }, [view])
+
+  useEffect(() => {
+    const syncFullscreen = () => setIsFullscreen(Boolean(document.fullscreenElement))
+    document.addEventListener('fullscreenchange', syncFullscreen)
+    return () => document.removeEventListener('fullscreenchange', syncFullscreen)
+  }, [])
+
+  const toggleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen()
+      else await studioViewportRef.current?.requestFullscreen()
+    } catch {
+      setStudioNotice('Fullscreen is unavailable in this browser.')
+    }
+  }
 
   const recordHistory = () => {
     setUndoStack(previous => [...previous, { designIndex, customColors: { ...customColors }, effect, finish }].slice(-30))
@@ -149,7 +168,7 @@ export default function App() {
         <div className="scene-glow" style={{background: designs[designIndex].background}} />
         <div className="scene-caption scene-caption-left"><span>OBJECT 001</span><b>THE ICON, REWIRED.</b></div>
         <div className="scene-caption scene-caption-right"><span>SCROLL TO MUTATE</span><ArrowDownRight size={18}/></div>
-        <div className="scene-canvas"><Experience progress={progress} designIndex={designIndex} customColors={customColors} selectedPart={selectedPart} finish={finish} onParts={setParts} onSelectPart={setSelectedPart} onReady={setModelReady}/></div>
+        <div className="scene-canvas"><Experience progress={progress} designIndex={designIndex} customColors={customColors} selectedPart={selectedPart} finish={finish} cameraPreset={cameraPreset} cameraResetToken={cameraResetToken} onParts={setParts} onSelectPart={setSelectedPart} onReady={setModelReady}/></div>
         <div className="scene-crosshair">+</div>
         <div className="scene-index"><span>AF1 / {String(designIndex+1).padStart(2,'0')}</span><span>{modelReady ? 'MODEL ONLINE' : 'LOADING MODEL'}</span></div>
       </div>
@@ -185,8 +204,9 @@ export default function App() {
     </> : <div className="customizer">
       <div className="customizer-heading"><button className="back-link" onClick={() => setView('home')}><ArrowLeft size={16}/> BACK TO EXPERIENCE</button><div><span className="eyebrow">AF1 / DESIGN STUDIO</span><h1>MAKE IT <em>YOURS.</em></h1><p>Pick a part. Pick a colour. Make something loud.</p></div><span className="studio-tag"><span className="status-dot"/> LIVE 3D STUDIO</span></div>
       <div className="studio-layout">
-        <div className="studio-viewport">
+        <div className="studio-viewport" ref={studioViewportRef}>
           <div className="studio-viewport-top"><span>PREVIEW / {designs[designIndex].name}</span><span>DRAG TO ORBIT <MousePointer2 size={13}/></span></div>
+          <div className="camera-controls" aria-label="Camera views">{[{id:'side',label:'SIDE'},{id:'three-quarter',label:'3/4'},{id:'front',label:'FRONT'},{id:'rear',label:'REAR'},{id:'top',label:'TOP'}].map(preset=><button key={preset.id} className={cameraPreset===preset.id?'camera-preset camera-preset-active':'camera-preset'} onClick={()=>{setCameraPreset(preset.id);setCameraResetToken(token=>token+1)}}>{preset.label}</button>)}<button className="camera-preset camera-fullscreen" onClick={()=>void toggleFullscreen()} aria-label={isFullscreen?'Exit fullscreen':'Enter fullscreen'}>{isFullscreen?<Minimize2 size={13}/>:<Maximize2 size={13}/>}</button></div>
           <div className="studio-model"><Experience progress={progress} designIndex={designIndex} customColors={customColors} selectedPart={selectedPart} finish={finish} onParts={setParts} onSelectPart={setSelectedPart} onReady={setModelReady} interactive/></div>
           <div className="studio-viewport-bottom"><span>{selectedPart ? selectedPart : 'SELECT A PART IN THE LIST'}</span><span>{visibleParts.length} MESHES DETECTED</span></div>
         </div>
