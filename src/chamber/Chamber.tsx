@@ -447,7 +447,7 @@ export function Chamber() {
         {mode === "bench" && !sheet && style && (
           <div className="rail">
             <button type="button" className="chip chip-on" aria-expanded={false} onClick={toggleSheet}>
-              Edit
+              Customize
             </button>
             <span className="swatch" style={{ background: style.color }} />
             <p className="min-w-0 text-sm text-bone">
@@ -474,7 +474,7 @@ export function Chamber() {
                   Hide
                 </button>
                 <button type="button" className="chip chip-on" onClick={addPair}>
-                  Add
+                  Add to bag
                 </button>
               </div>
 
