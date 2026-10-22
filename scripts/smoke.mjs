@@ -26,8 +26,11 @@ try {
   const customise = page.getByRole("button", { name: "Customise yours", exact: true });
   await customise.waitFor({ state: "visible", timeout: 10000 });
   await customise.click({ force: true });
+  await page.locator(".customizer-panel").waitFor({ state: "visible", timeout: 5000 });
+  const panelWidth = await page.locator(".customizer-panel").evaluate((element) => element.getBoundingClientRect().width);
+  if (panelWidth < 300) throw new Error(`Customiser panel is too narrow: ${panelWidth}px`);
 
-  for (const label of ["MAKE IT YOURS", "Colourway", "Colour", "Finish", "Texture", "Angle", "Size"]) {
+  for (const label of ["YOUR PAIR", "Choose a colourway", "Colour", "Material finish", "Details", "View your pair", "Size"]) {
     await page.getByText(label, { exact: true }).first().waitFor({ state: "visible", timeout: 5000 });
   }
 
@@ -40,13 +43,13 @@ try {
   await page.getByLabel("Name", { exact: true }).fill("Test Buyer");
   await page.getByLabel("Email", { exact: true }).fill("test@example.com");
   await page.getByRole("button", { name: "Save design", exact: true }).click({ force: true });
-  await page.getByText(/This is a concept storefront/).waitFor({ state: "visible", timeout: 5000 });
+  await page.getByText(/No payment is taken in this concept store/).waitFor({ state: "visible", timeout: 5000 });
 
   await page.getByRole("button", { name: "Back to customising", exact: true }).click({ force: true });
   await page.getByRole("button", { name: "Discover", exact: true }).click({ force: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(300);
-  await page.getByText("CHAMBER", { exact: false }).first().waitFor({ state: "visible", timeout: 5000 });
+  await page.getByText("AF1 STUDIO", { exact: false }).first().waitFor({ state: "visible", timeout: 5000 });
   const dimensions = await page.evaluate(() => ({
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,
