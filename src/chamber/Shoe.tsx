@@ -127,6 +127,8 @@ export function Shoe({
   const hover = useRef<PartId | null>(null);
   const prevSel = useRef("");
   const pulse = useRef(0);
+  const lastSequenceNonce = useRef(0);
+  const sequenceStart = useRef<number | null>(null);
 
   useLayoutEffect(() => {
     fitRef.current = { radius: prepared.radius, halfY: prepared.halfY };
@@ -150,18 +152,48 @@ export function Shoe({
     const chamber = useChamber.getState();
     const knife = chamber.knife;
     prepared.last.visible = knife > 0.015;
+    const elapsed = state.clock.elapsedTime;
+    if (chamber.sequenceNonce !== lastSequenceNonce.current) {
+      lastSequenceNonce.current = chamber.sequenceNonce;
+      sequenceStart.current = elapsed;
+    }
+    if (chamber.mode !== "bench") sequenceStart.current = null;
+
     const scroll = progressRef.current ?? 0;
-    // The campaign sequence is choreographed in three beats: pull apart, orbit,
-    // then click back into place. The complete orbit happens while the shoe is exploded.
+    // The campaign still runs its scroll-led orbit. In Customize, the signature
+    // sequence takes over: explode, rotate while separated, then reassemble.
     const rise = THREE.MathUtils.smoothstep(scroll, 0.18, 0.32);
     const settle = 1 - THREE.MathUtils.smoothstep(scroll, 0.50, 0.59);
     const cinematicExplosion = rise * settle * 0.96;
-    const explosion = chamber.mode === "bench" ? chamber.explosion : cinematicExplosion;
-    const orbit = scroll >= 0.50 ? 0 : THREE.MathUtils.smoothstep(scroll, 0.31, 0.50) * Math.PI * 2;
-    group.rotation.y =
-      chamber.mode === "pass" && !chamber.reduced
-        ? orbit
-        : THREE.MathUtils.damp(group.rotation.y, 0, 5, d);
+    let sequenceExplosion: number | null = null;
+    if (sequenceStart.current !== null) {
+      const t = elapsed - sequenceStart.current;
+      const explodeEnd = chamber.reduced ? 0.4 : 1.25;
+      const rotateEnd = chamber.reduced ? explodeEnd : 4.85;
+      const assembleEnd = chamber.reduced ? 0.9 : 6.4;
+      if (t < explodeEnd) {
+        sequenceExplosion = THREE.MathUtils.smoothstep(t / explodeEnd, 0, 1);
+        group.rotation.y = 0;
+      } else if (t < rotateEnd) {
+        sequenceExplosion = 1;
+        const spin = THREE.MathUtils.smoothstep((t - explodeEnd) / (rotateEnd - explodeEnd), 0, 1);
+        group.rotation.y = spin * Math.PI * 2;
+      } else if (t < assembleEnd) {
+        sequenceExplosion = 1 - THREE.MathUtils.smoothstep((t - rotateEnd) / (assembleEnd - rotateEnd), 0, 1);
+        group.rotation.y = Math.PI * 2;
+      } else {
+        sequenceStart.current = null;
+        sequenceExplosion = 0;
+        group.rotation.y = 0;
+      }
+    } else {
+      const orbit = scroll >= 0.50 ? 0 : THREE.MathUtils.smoothstep(scroll, 0.31, 0.50) * Math.PI * 2;
+      group.rotation.y =
+        chamber.mode === "pass" && !chamber.reduced
+          ? orbit
+          : THREE.MathUtils.damp(group.rotation.y, 0, 5, d);
+    }
+    const explosion = sequenceExplosion ?? (chamber.mode === "bench" ? chamber.explosion : cinematicExplosion);
     const hiddenParts = new Set(chamber.mode === "bench" ? chamber.hiddenParts : []);
     for (const panel of prepared.panels) {
       panel.object.position.x = THREE.MathUtils.damp(panel.object.position.x, panel.origin.x + panel.explode.x * explosion, 8, d);
