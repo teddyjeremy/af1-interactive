@@ -5,7 +5,7 @@ import Experience, { designs, type PartInfo } from './Experience'
 type View = 'home' | 'customize'
 type DesignSnapshot = { designIndex: number; customColors: Record<string, string>; effect: string; finish: string }
 const swatches = ['#f6f2e9','#171717','#ff3b91','#ff5d35','#ffd400','#c8ff00','#00d9ff','#4b4bff','#9c63ff','#7dffb3','#8a573b','#a7a7a7']
-const effects = [
+const effects: { id: string; label: string; desc: string; disabled?: boolean }[] = [
   {id:'none',label:'Clean finish',desc:'Colour only'},
   {id:'rainbow',label:'Spectrum panels',desc:'Multi-colour mesh palette'},
   {id:'drip',label:'Liquid drip',desc:'Unavailable · UV mask needed',disabled:true},
