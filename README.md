@@ -41,13 +41,13 @@ Six shared preset definitions are maintained in `src/Experience.tsx`: Chrome Blo
 
 The material colour is changed on cloned materials, with the existing material colour retained as a multiplier. This can preserve texture detail, but the appearance depends on the source material's texture and base tint. A combined mesh cannot provide arbitrary independently editable surface regions without suitable separate geometry, material assignments or UV masks.
 
-The current studio supports runtime mesh discovery, preset selection, part colour controls and JSON export of the current palette/effect selection and per-mesh colour overrides.
+The current studio supports runtime mesh discovery, preset selection, per-mesh colour overrides, five camera views, camera reset by reselecting a view, fullscreen viewport, physically based matte/satin/gloss/high-gloss/metallic finish settings, undo/redo history, and versioned JSON import/export with validation. The spectrum-palette option recolours the actual shoe meshes with a coordinated multicolour palette. Finish and palette state are included in design history and JSON export.
 
 ## Current limitations
 
 - The GLB has not yet had a full binary asset audit. Mesh hierarchy, UV coverage, texture maps, polygon counts and independent material regions still need to be inspected in a dedicated GLB viewer or asset-analysis script.
-- Rainbow, drip and splatter options in the current UI are not yet backed by complete UV-aware procedural surface shaders or decal masks. The UI currently describes this limitation; do not treat those options as production-ready surface effects.
-- Fullscreen, camera presets, robust undo/redo, validated JSON import, screenshot export and shareable design URLs still need implementation and verification.
+- The liquid-drip and paint-splatter controls are intentionally disabled because the asset's UV layout and region masks have not yet been audited and suitable decal artwork is not included. The spectrum option is a mesh-level multicolour treatment, not a continuous UV gradient.
+- Screenshot export and shareable design URLs still need implementation and verification. Camera controls, undo/redo, fullscreen, and validated JSON import/export have been implemented but still require browser-level acceptance testing.
 - A JSON export is a local configuration file, not a server-side saved design.
 - No build or browser automation result is documented here as passing unless it has actually been run against the current revision.
 
