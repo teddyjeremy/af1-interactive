@@ -375,7 +375,7 @@ export function Chamber() {
           <div className="flex gap-2">
             {mode === "bench" && (
               <button type="button" className="mode-btn" onClick={leaveBench}>
-                Pass
+                Explore
               </button>
             )}
             <button
@@ -384,7 +384,7 @@ export function Chamber() {
               onClick={openCart}
               aria-pressed={cartOpen}
             >
-              Cart{cartCount ? ` ${cartCount}` : ""}
+              Bag{cartCount ? ` ${cartCount}` : ""}
             </button>
           </div>
         </header>
@@ -405,7 +405,7 @@ export function Chamber() {
                 <>Make it<br /><em>your own.</em></>,
               ][storyStage]}</h1>
               <p className="story-description">{[
-                "An icon of the court, reimagined as an immersive 3D study. Take your time. Look closer.",
+                "An icon of the court, reimagined as an immersive product story. Take your time. Look closer.",
                 "Follow the silhouette as the camera moves around the leather, stitching, and unmistakable shape.",
                 "Watch the construction come apart, then settle back into place. Nothing is hidden from the light.",
                 "A new colourway, a new attitude. The materials shift as you move through the story.",
@@ -430,7 +430,7 @@ export function Chamber() {
 
         {mode === "pass" && ready && (
           <button type="button" className="mode-btn mode-btn-on end-action" onClick={openBench}>
-            Bench
+            Customize
           </button>
         )}
 
