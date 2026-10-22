@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { isPartId, LAST_HIDDEN, type PartId } from "./parts";
-import { passPair } from "./presets";
+import { passPair, PRESETS } from "./presets";
 import { mixFinish, MODEL_URL, toPhysical, treatmentId, woodMaterial } from "./materials";
 import { useChamber } from "./store";
 
@@ -145,11 +145,12 @@ export function Shoe({
     const knife = chamber.knife;
     prepared.last.visible = knife > 0.015;
     const explosion = chamber.mode === "bench" ? chamber.explosion : 0;
-    const hiddenParts = new Set(chamber.hiddenParts);
+    const hiddenParts = new Set(chamber.mode === "bench" ? chamber.hiddenParts : []);
     const positionDamp = 1 - Math.exp(-8 * d);
     for (const panel of prepared.panels) {
-      const destination = panel.origin.clone().addScaledVector(panel.explode, explosion);
-      panel.object.position.lerp(destination, positionDamp);
+      panel.object.position.x = THREE.MathUtils.damp(panel.object.position.x, panel.origin.x + panel.explode.x * explosion, 8, d);
+      panel.object.position.y = THREE.MathUtils.damp(panel.object.position.y, panel.origin.y + panel.explode.y * explosion, 8, d);
+      panel.object.position.z = THREE.MathUtils.damp(panel.object.position.z, panel.origin.z + panel.explode.z * explosion, 8, d);
       panel.object.visible = panel.baseVisible && !hiddenParts.has(panel.name);
     }
     const along = THREE.MathUtils.lerp(-1.7, 1.7, knife);
@@ -206,7 +207,11 @@ function paint(
   const chamber = useChamber.getState();
   const sample =
     chamber.mode === "bench"
-      ? { from: chamber.design, to: chamber.design, t: 0 }
+      ? {
+          from: chamber.compareOriginal ? PRESETS[0] : chamber.design,
+          to: chamber.compareOriginal ? PRESETS[0] : chamber.design,
+          t: 0,
+        }
       : passPair(progress);
   const selected = new Set(chamber.selected);
   const selKey = chamber.selected.join("|");
@@ -236,7 +241,7 @@ function paint(
     mat.sheen = THREE.MathUtils.damp(mat.sheen, finish.sheen, 7, delta);
     mat.sheenColor.set("#f4efe6");
     mat.envMapIntensity = THREE.MathUtils.damp(mat.envMapIntensity, finish.env, 7, delta);
-    mat.wireframe = chamber.wireframe;
+    mat.wireframe = chamber.mode === "bench" && chamber.wireframe;
 
     const treat = sample.t < 0.5 ? from.treatment : to.treatment;
     const treatValue = treatmentId(treat);
