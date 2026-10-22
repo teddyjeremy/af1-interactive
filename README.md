@@ -11,6 +11,8 @@ The shoe stays large. The pass moves through the original colourway, a held beam
 - **Pass again.** Leaving the bench returns the original shoe and the start of the scroll. Open Bench again and the last edit is still there.
 - **Study cart.** Add the pair. Checkout only logs a note. Nothing is charged.
 - **Isolate.** Double click a panel to drop everything else into shadow.
+- **Construction lab.** Explode the existing named GLB panels, smoothly assemble them, and adjust the separation amount. Blueprint wireframe, hide/show selection, show-all, and adjustable studio lighting are available in the editor.
+- **Inspection experiments.** Turntable rotation, a moving inspection-light sweep, and a non-destructive comparison against the original colourway let you inspect the form without losing your custom design.
 - **Prints.** Restores the model colour maps on laces, tongue, collar, insole, and stitch.
 - **Undo, redo, reset, JSON import and export, a PNG frame, a shareable link, camera presets, fullscreen.**
 
