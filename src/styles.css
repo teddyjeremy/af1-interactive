@@ -20,3 +20,16 @@
 .history-actions .reset-button { border: 1px solid #34322d; background: #191917; }
 .history-actions .reset-button:disabled { opacity: .35; cursor: not-allowed; }
 .studio-notice { margin: 0; padding: 10px 12px; border: 1px solid #34322d; color: #d6d2c8; font: 9px/1.6 var(--mono); overflow-wrap: anywhere; }
+
+
+.camera-controls { position: absolute; z-index: 5; top: 54px; left: 14px; display: flex; flex-wrap: wrap; gap: 5px; max-width: calc(100% - 28px); pointer-events: auto; }
+.camera-preset { min-height: 30px; padding: 7px 9px; border: 1px solid #48443d; background: rgba(12,12,12,.82); color: #c8c4ba; font: 8px var(--mono); letter-spacing: .6px; }
+.camera-preset:hover, .camera-preset-active { border-color: var(--acid); color: var(--acid); }
+.camera-fullscreen { display: grid; place-items: center; min-width: 32px; }
+.studio-viewport:fullscreen { width: 100vw; height: 100vh; min-height: 100vh; border: 0; background: #101010; }
+.studio-viewport:fullscreen .studio-model { inset: 0; }
+.studio-viewport:fullscreen .camera-controls { top: 58px; left: 20px; }
+@media (max-width: 600px) {
+  .camera-controls { top: 48px; left: 8px; gap: 4px; max-width: calc(100% - 16px); }
+  .camera-preset { min-height: 28px; padding: 6px 7px; font-size: 7px; }
+}
