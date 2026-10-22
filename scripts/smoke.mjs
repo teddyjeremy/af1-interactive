@@ -9,6 +9,9 @@ const failures = [];
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, reducedMotion: "reduce" });
   page.on("pageerror", (error) => failures.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "warning" && message.text().includes("GLB panels missing")) failures.push(message.text());
+  });
   await page.goto(baseURL, { waitUntil: "domcontentloaded" });
   await page.locator("canvas").waitFor({ state: "visible", timeout: 30000 });
   await page.waitForTimeout(1500);
