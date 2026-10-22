@@ -30,8 +30,8 @@ function normalizeName(name: string) {
   return name.replace(/^AF1[_\s-]*/i, '').replaceAll('_', ' ').replace(/([a-z])([A-Z])/g, '$1 $2').trim()
 }
 
-function Shoe({ progress, designIndex, customColors, selectedPart, finish, onParts, onSelectPart, onReady, interactive = false }: {
-  progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null; finish: string;
+function Shoe({ progress, designIndex, customColors, selectedPart, finish, effect, onParts, onSelectPart, onReady, interactive = false }: {
+  progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null; finish: string; effect: string;
   onParts: (parts: PartInfo[]) => void; onSelectPart: (name: string) => void; onReady: (ready: boolean) => void; interactive?: boolean
 }) {
   const { scene } = useGLTF('https://raw.githubusercontent.com/teddyjeremy/af1-interactive/main/models/nike%20shoes.glb')
@@ -87,7 +87,8 @@ function Shoe({ progress, designIndex, customColors, selectedPart, finish, onPar
       if (!(object instanceof THREE.Mesh)) return
       const mats = materialList(object.material)
       const custom = customColors[object.name]
-      const designColor = colorForMesh(object.name, designs[designIndex].colors)
+      const activePalette = effect === 'rainbow' ? ['#ff3b91', '#ffd400', '#00d9ff', '#9c63ff', '#7dffb3'] : designs[designIndex].colors
+      const designColor = colorForMesh(object.name, activePalette)
       mats.forEach((material) => {
         const mat = material as THREE.MeshStandardMaterial
         if (!mat.color?.isColor) return
@@ -107,7 +108,7 @@ function Shoe({ progress, designIndex, customColors, selectedPart, finish, onPar
         mat.needsUpdate = true
       })
     })
-  }, [prepared, designIndex, customColors, selectedPart, finish])
+  }, [prepared, designIndex, customColors, selectedPart, finish, effect])
 
   useFrame((state, delta) => {
     if (!group.current) return
@@ -141,8 +142,8 @@ function Loading() {
   return <Html center><div className="loading-model"><span className="loading-dot" /> LOADING YOUR CANVAS</div></Html>
 }
 
-export default function Experience({ progress, designIndex, customColors, selectedPart, finish, cameraPreset = 'three-quarter', cameraResetToken = 0, onParts, onSelectPart, onReady, interactive = false }: {
-  progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null; finish: string;
+export default function Experience({ progress, designIndex, customColors, selectedPart, finish, effect, cameraPreset = 'three-quarter', cameraResetToken = 0, onParts, onSelectPart, onReady, interactive = false }: {
+  progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null; finish: string; effect: string;
   cameraPreset?: string; cameraResetToken?: number;
   onParts: (parts: PartInfo[]) => void; onSelectPart: (name: string) => void; onReady: (ready: boolean) => void; interactive?: boolean
 }) {
@@ -184,7 +185,7 @@ export default function Experience({ progress, designIndex, customColors, select
     <pointLight position={[3, -1, 2]} intensity={1.8} color={designs[designIndex].accent} />
     <Suspense fallback={<Loading />}>
       <Float speed={1.1} rotationIntensity={interactive ? 0 : 0.025} floatIntensity={interactive ? 0 : 0.05}>
-        <Shoe progress={progress} designIndex={designIndex} customColors={customColors} selectedPart={selectedPart} finish={finish} onParts={onParts} onSelectPart={onSelectPart} onReady={onReady} interactive={interactive} />
+        <Shoe progress={progress} designIndex={designIndex} customColors={customColors} selectedPart={selectedPart} finish={finish} effect={effect} onParts={onParts} onSelectPart={onSelectPart} onReady={onReady} interactive={interactive} />
       </Float>
       <Environment preset="studio" />
       <ContactShadows position={[0, -1.05, 0]} opacity={0.3} scale={5} blur={2.2} far={3.5} />
