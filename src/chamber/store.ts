@@ -51,6 +51,7 @@ type ChamberState = {
   previewStyle: (patch: Partial<PartStyle>) => void;
   endEdit: () => void;
   applyPreset: (index: number) => void;
+  randomizeColorway: () => void;
   undo: () => void;
   redo: () => void;
   reset: () => void;
@@ -165,6 +166,27 @@ export const useChamber = create<ChamberState>((set, get) => ({
       edited: true,
       notice: null,
     });
+  },
+  randomizeColorway: () => {
+    const current = get().design;
+    const palette = ["#f3ecdf", "#171816", "#ed4b24", "#6eafc9", "#1e3d2f", "#e0c27a", "#c6a07a", "#e6e1ea", "#0c0c0e"];
+    const pick = (values: string[]) => values[Math.floor(Math.random() * values.length)];
+    const next = cloneDesign(current);
+    const upper = pick(palette);
+    const accent = pick(palette.filter((color) => color !== upper));
+    const sole = pick(["#f3ecdf", "#171816", "#c6a07a", "#e0c27a"]);
+    for (const id of PARTS) {
+      const color = id.includes("Stitch") || id === "AF1_LaceTip" || id === "AF1_Eyelet"
+        ? accent
+        : id.includes("Sole") || id === "AF1_Outsole" || id === "AF1_Midsole"
+          ? sole
+          : id === "AF1_Swoosh" || id === "AF1_Laces" || id === "AF1_HeelTab"
+            ? accent
+            : upper;
+      next.parts[id] = { ...next.parts[id], color };
+    }
+    next.name = "Custom colourway";
+    set({ past: pushHistory(get().past, current), future: [], design: next, edited: true, notice: "New colourway ready. Undo to compare." });
   },
   undo: () => {
     const { past, design, future } = get();
