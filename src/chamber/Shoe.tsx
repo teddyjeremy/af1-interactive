@@ -150,7 +150,11 @@ export function Shoe({
     const chamber = useChamber.getState();
     const knife = chamber.knife;
     prepared.last.visible = knife > 0.015;
-    const explosion = chamber.mode === "bench" ? chamber.explosion : 0;
+    const scroll = progressRef.current ?? 0;
+    const rise = THREE.MathUtils.smoothstep(scroll, 0.17, 0.34);
+    const fall = 1 - THREE.MathUtils.smoothstep(scroll, 0.37, 0.51);
+    const cinematicExplosion = Math.min(rise, fall) * 0.92;
+    const explosion = chamber.mode === "bench" ? chamber.explosion : cinematicExplosion;
     const hiddenParts = new Set(chamber.mode === "bench" ? chamber.hiddenParts : []);
     for (const panel of prepared.panels) {
       panel.object.position.x = THREE.MathUtils.damp(panel.object.position.x, panel.origin.x + panel.explode.x * explosion, 8, d);
@@ -246,7 +250,7 @@ function paint(
     mat.sheen = THREE.MathUtils.damp(mat.sheen, finish.sheen, 7, delta);
     mat.sheenColor.set("#f4efe6");
     mat.envMapIntensity = THREE.MathUtils.damp(mat.envMapIntensity, finish.env, 7, delta);
-    mat.wireframe = chamber.mode === "bench" && chamber.wireframe;
+    mat.wireframe = chamber.mode === "bench" ? chamber.wireframe : progress > 0.455 && progress < 0.57;
 
     const treat = sample.t < 0.5 ? from.treatment : to.treatment;
     const treatValue = treatmentId(treat);
