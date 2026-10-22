@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { ContactShadows, Environment, Float, Html, OrbitControls, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
@@ -15,88 +15,115 @@ export const designs: Design[] = [
   { name: 'GRAPE SODA', colors: ['#d9c7ff','#6d3eff','#ff7dd5','#252044','#f5f0ff'], background: '#a17aff', accent: '#c9ff45', note: 'Violet haze / candy gloss' },
 ]
 
-const palette = ['#f6f2e9','#171717','#ff3b91','#ff5d35','#ffd400','#c8ff00','#00d9ff','#4b4bff','#9c63ff','#7dffb3','#8a573b','#a7a7a7']
-
+function materialList(material: THREE.Material | THREE.Material[]) {
+  return Array.isArray(material) ? material : [material]
+}
+function readColor(material: THREE.Material) {
+  const candidate = material as THREE.MeshStandardMaterial
+  return candidate.color?.isColor ? '#' + candidate.color.getHexString() : '#f5f0e6'
+}
+function colorForMesh(name: string, palette: string[]) {
+  const hash = Array.from(name).reduce((total, char) => total + char.charCodeAt(0), 0)
+  return palette[hash % palette.length]
+}
 function normalizeName(name: string) {
   return name.replace(/^AF1[_\s-]*/i, '').replaceAll('_', ' ').replace(/([a-z])([A-Z])/g, '$1 $2').trim()
-}
-function getColor(material: THREE.Material) {
-  const m = material as THREE.MeshStandardMaterial
-  return m.color?.getHexString ? '#' + m.color.getHexString() : '#f5f0e6'
 }
 
 function Shoe({ progress, designIndex, customColors, selectedPart, onParts, onSelectPart, onReady, interactive = false }: {
   progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null;
   onParts: (parts: PartInfo[]) => void; onSelectPart: (name: string) => void; onReady: (ready: boolean) => void; interactive?: boolean
 }) {
-  const { scene } = useGLTF('https://raw.githubusercontent.com/teddyjeremy/af1-interactive/main/models/nike%20shoes.glb')
+  const { scene } = useGLTF('/models/nike%20shoes.glb')
   const group = useRef<THREE.Group>(null)
-  const meshes = useRef<THREE.Mesh[]>([])
-  const originalColors = useRef<Record<string,string>>({})
-  const appliedDesign = designs[designIndex]
-
-  const partData = useMemo(() => {
-    const list: PartInfo[] = []
-    const materialsSeen = new Set<string>()
-    scene.traverse((obj) => {
-      if (!(obj instanceof THREE.Mesh)) return
-      obj.castShadow = true
-      obj.receiveShadow = true
-      meshes.current.push(obj)
-      const mats = Array.isArray(obj.material) ? obj.material : [obj.material]
-      const materialNames: string[] = []
-      mats.forEach((mat, i) => {
-        if (!originalColors.current[mat.uuid]) originalColors.current[mat.uuid] = getColor(mat)
-        const key = mat.name || `Material ${i + 1}`
-        materialNames.push(key)
-        if (!materialsSeen.has(key)) materialsSeen.add(key)
-      })
-      list.push({ name: obj.name || 'Unnamed part', materialNames, color: getColor(mats[0]), meshCount: 1 })
+  const prepared = useMemo(() => {
+    const copy = scene.clone(true)
+    copy.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return
+      const cloneMaterial = (material: THREE.Material) => {
+        const next = material.clone()
+        const standard = next as THREE.MeshStandardMaterial
+        if (standard.color?.isColor) next.userData.af1OriginalColor = standard.color.getHexString()
+        if ('roughness' in standard) next.userData.af1OriginalRoughness = standard.roughness
+        if ('metalness' in standard) next.userData.af1OriginalMetalness = standard.metalness
+        return next
+      }
+      object.material = Array.isArray(object.material)
+        ? object.material.map(cloneMaterial)
+        : cloneMaterial(object.material)
+      object.castShadow = true
+      object.receiveShadow = true
     })
-    const unique = Array.from(new Map(list.map(p => [p.name, p])).values()).sort((a,b) => a.name.localeCompare(b.name))
-    onParts(unique)
-    onReady(true)
-    return unique
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    const bounds = new THREE.Box3().setFromObject(copy)
+    const size = bounds.getSize(new THREE.Vector3())
+    const center = bounds.getCenter(new THREE.Vector3())
+    const maxDimension = Math.max(size.x, size.y, size.z, 0.001)
+    // Normalize around the actual GLB bounds so camera distance is independent of export units.
+    const scale = 2.85 / maxDimension
+    return { scene: copy, center, scale, size }
   }, [scene])
 
   useEffect(() => {
-    meshes.current = []
-    return () => { onReady(false) }
-  }, [scene, onReady])
+    const grouped = new Map<string, PartInfo>()
+    prepared.scene.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return
+      const name = object.name || 'Unnamed part'
+      const mats = materialList(object.material)
+      const info = grouped.get(name) ?? { name, materialNames: [], color: readColor(mats[0]), meshCount: 0 }
+      info.meshCount += 1
+      mats.forEach((mat) => {
+        const label = mat.name || 'Default material'
+        if (!info.materialNames.includes(label)) info.materialNames.push(label)
+      })
+      grouped.set(name, info)
+    })
+    onParts(Array.from(grouped.values()).sort((a, b) => a.name.localeCompare(b.name)))
+    onReady(true)
+    return () => onReady(false)
+  }, [prepared, onParts, onReady])
 
   useEffect(() => {
-    scene.traverse((obj) => {
-      if (!(obj instanceof THREE.Mesh)) return
-      const mats = Array.isArray(obj.material) ? obj.material : [obj.material]
-      const designColor = appliedDesign.colors[Math.abs(obj.name.split('').reduce((a,c) => a + c.charCodeAt(0), 0)) % appliedDesign.colors.length]
-      const custom = customColors[obj.name]
+    prepared.scene.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return
+      const mats = materialList(object.material)
+      const custom = customColors[object.name]
+      const designColor = colorForMesh(object.name, designs[designIndex].colors)
       mats.forEach((material) => {
         const mat = material as THREE.MeshStandardMaterial
-        if (!mat.color) return
-        mat.color.set(custom || (selectedPart === obj.name ? (customColors[obj.name] || designColor) : designColor))
+        if (!mat.color?.isColor) return
+        const original = mat.userData.af1OriginalColor as string | undefined
+        mat.color.set('#' + (original ?? 'f5f0e6'))
+        mat.color.multiply(new THREE.Color(custom || designColor))
         mat.needsUpdate = true
       })
     })
-  }, [scene, designIndex, customColors, selectedPart, appliedDesign.colors])
+  }, [prepared, designIndex, customColors, selectedPart])
 
   useFrame((state, delta) => {
     if (!group.current) return
-    const p = progress.current
-    const targetY = p < 0.18 ? 0.05 : p < 0.42 ? -0.3 : p < 0.68 ? 0.05 : 0.35
-    const targetRotY = state.pointer.x * 0.28 + (p * Math.PI * 2.1)
-    const targetRotX = -0.16 + state.pointer.y * 0.12 + Math.sin(p * Math.PI * 2) * 0.1
+    const p = interactive ? 0 : progress.current
+    const targetY = p < 0.18 ? 0.03 : p < 0.42 ? -0.12 : p < 0.68 ? 0.02 : 0.1
+    const targetRotY = (interactive ? 0 : p * Math.PI * 1.35) + (interactive ? 0 : state.pointer.x * 0.04)
+    const targetRotX = interactive ? 0.02 : -0.12 + Math.sin(p * Math.PI * 2) * 0.045
     group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, targetRotY, 3, delta)
     group.current.rotation.x = THREE.MathUtils.damp(group.current.rotation.x, targetRotX, 3, delta)
-    group.current.position.y = THREE.MathUtils.damp(group.current.position.y, targetY + Math.sin(state.clock.elapsedTime * 0.8) * 0.08, 3, delta)
-    const s = p < 0.2 ? 1.05 : p < 0.5 ? 1.0 : p < 0.75 ? 0.94 : 1.08
-    group.current.scale.setScalar(THREE.MathUtils.damp(group.current.scale.x, s, 3, delta))
+    group.current.position.y = THREE.MathUtils.damp(group.current.position.y, targetY + Math.sin(state.clock.elapsedTime * 0.65) * 0.035, 3, delta)
+    const scale = interactive ? 1 : p < 0.2 ? 1.03 : p < 0.5 ? 1 : p < 0.75 ? 0.98 : 1.04
+    group.current.scale.setScalar(THREE.MathUtils.damp(group.current.scale.x, scale, 3, delta))
   })
 
-  return <group ref={group} rotation={[0.04, -0.65, -0.08]} position={[0,-0.08,0]}>
-    <primitive object={scene} onClick={(event: any) => { if (!interactive) return; event.stopPropagation(); if (event.object?.name) onSelectPart(event.object.name) }} />
-    {partData.length > 0 && <mesh visible={false}><sphereGeometry args={[0.01]} /><meshBasicMaterial /></mesh>}
-    {/* Invisible hit targets are avoided; real mesh clicks are wired by the parent Canvas event handler. */}
+  return <group ref={group}>
+    <group scale={prepared.scale} rotation={[0.04, -0.52, -0.04]}>
+      <primitive
+        object={prepared.scene}
+        position={[-prepared.center.x, -prepared.center.y, -prepared.center.z]}
+        onClick={(event: { stopPropagation: () => void; object?: THREE.Object3D }) => {
+          if (!interactive) return
+          event.stopPropagation()
+          if (event.object?.name) onSelectPart(event.object.name)
+        }}
+      />
+    </group>
   </group>
 }
 
@@ -108,35 +135,44 @@ export default function Experience({ progress, designIndex, customColors, select
   progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null;
   onParts: (parts: PartInfo[]) => void; onSelectPart: (name: string) => void; onReady: (ready: boolean) => void; interactive?: boolean
 }) {
-  const { scene } = useGLTF('https://raw.githubusercontent.com/teddyjeremy/af1-interactive/main/models/nike%20shoes.glb')
-  const handleClick = (event: any) => {
-    if (!interactive) return
-    event.stopPropagation()
-    const name = event.object?.name
-    if (name) onSelectPart(name)
-  }
-  useEffect(() => {
-    scene.traverse((obj) => {
-      if (obj instanceof THREE.Mesh) {
-        obj.userData.af1Clickable = true
-      }
-    })
+  const { scene } = useGLTF('/models/nike%20shoes.glb')
+  const cameraDistance = useMemo(() => {
+    const bounds = new THREE.Box3().setFromObject(scene)
+    const size = bounds.getSize(new THREE.Vector3())
+    const maxDimension = Math.max(size.x, size.y, size.z, 0.001)
+    return Math.max(3.8, (maxDimension * (2.85 / maxDimension)) * 1.45)
   }, [scene])
 
-  return <Canvas shadows dpr={[1, 1.5]} camera={{ position: [0.1, 0.2, 5.2], fov: 34 }} gl={{ antialias: true, alpha: true }} onPointerMissed={() => interactive && onSelectPart('')}>
+  return <Canvas
+    shadows
+    dpr={[1, 1.35]}
+    camera={{ position: [0.1, 0.18, cameraDistance], fov: 31, near: 0.01, far: 100 }}
+    gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+    onPointerMissed={() => interactive && onSelectPart('')}
+  >
     <color attach="background" args={['#0a0a0a']} />
-    <ambientLight intensity={1.6} />
-    <directionalLight position={[4, 5, 5]} intensity={3.1} castShadow shadow-mapSize={[1024,1024]} />
-    <spotLight position={[-4, 3, -3]} intensity={3.5} color="#ff4fa3" angle={0.6} penumbra={0.8} />
-    <pointLight position={[3, -1, 2]} intensity={2.4} color={designs[designIndex].accent} />
+    <ambientLight intensity={1.25} />
+    <directionalLight position={[4, 5, 5]} intensity={2.8} castShadow shadow-mapSize={[1024, 1024]} />
+    <spotLight position={[-4, 3, -3]} intensity={2.8} color="#ff4fa3" angle={0.6} penumbra={0.8} />
+    <pointLight position={[3, -1, 2]} intensity={1.8} color={designs[designIndex].accent} />
     <Suspense fallback={<Loading />}>
-      <Float speed={1.25} rotationIntensity={0.05} floatIntensity={0.13}>
+      <Float speed={1.1} rotationIntensity={interactive ? 0 : 0.025} floatIntensity={interactive ? 0 : 0.05}>
         <Shoe progress={progress} designIndex={designIndex} customColors={customColors} selectedPart={selectedPart} onParts={onParts} onSelectPart={onSelectPart} onReady={onReady} interactive={interactive} />
       </Float>
       <Environment preset="studio" />
-      <ContactShadows position={[0,-1.25,0]} opacity={0.32} scale={8} blur={2.4} far={4} />
+      <ContactShadows position={[0, -1.05, 0]} opacity={0.3} scale={5} blur={2.2} far={3.5} />
     </Suspense>
-    <OrbitControls enabled={interactive} enablePan={false} minDistance={3.5} maxDistance={7} minPolarAngle={Math.PI*0.25} maxPolarAngle={Math.PI*0.72} />
+    <OrbitControls
+      enabled={interactive}
+      enablePan={false}
+      enableDamping
+      dampingFactor={0.08}
+      minDistance={2.8}
+      maxDistance={6.5}
+      minPolarAngle={Math.PI * 0.18}
+      maxPolarAngle={Math.PI * 0.82}
+      target={[0, 0, 0]}
+    />
   </Canvas>
 }
-useGLTF.preload('https://raw.githubusercontent.com/teddyjeremy/af1-interactive/main/models/nike%20shoes.glb')
+useGLTF.preload('/models/nike%20shoes.glb')
