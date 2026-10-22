@@ -104,11 +104,10 @@ export function Chamber() {
     setMounted(true);
     setWebgl(hasWebGL());
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const narrow = window.matchMedia("(max-width: 760px)");
     useChamber.getState().setReduced(motion.matches);
     useChamber.getState().hydrateCart();
     useChamber.getState().hydrateStudy();
-    setSheet(!narrow.matches);
+    setSheet(true);
     const onMotion = () => useChamber.getState().setReduced(motion.matches);
     const onHide = () => setHidden(document.hidden);
     motion.addEventListener("change", onMotion);
@@ -368,7 +367,7 @@ export function Chamber() {
           <div className="flex gap-2">
             {mode === "bench" && (
               <button type="button" className="mode-btn" onClick={leaveBench}>
-                Discover
+                Overview
               </button>
             )}
             <button
