@@ -1,42 +1,62 @@
-# AF1 Playground — Interactive 3D Sneaker Experience
+# AF1 Interactive — Make Your Mark
 
-A scroll-driven React + Three.js sneaker experiment with a live configurator.
+A scroll-led, interactive 3D sneaker playground built around one GLB asset. The same sneaker appears in the cinematic experience and the customization studio.
 
 ## Stack
-- React + Vite + TypeScript
-- Three.js via React Three Fiber
-- Drei (GLTF loading, environment lighting, float, contact shadows, orbit controls)
-- Responsive CSS, Lucide icons
-- Vercel-ready SPA configuration
 
-## Model
-The app loads the existing model at `/models/nike%20shoes.glb`, which is stored in `models/nike shoes.glb` in this repository. The deployment setup should serve the same file from the public URL. If the build's public asset layout differs, copy the model into `public/models/nike shoes.glb` and update the loader path accordingly.
+- React 19, TypeScript, Vite
+- Three.js through React Three Fiber
+- Drei for GLTF loading, environment lighting, orbit controls, floating motion and contact shadows
+- GSAP is installed for future scroll choreography
+- Lucide React icons
+- Vercel SPA rewrite configuration
 
 ## Run locally
+
 ```bash
 npm install
 npm run dev
 ```
 
-## Build
+Build and preview the production bundle:
+
 ```bash
 npm run build
 npm run preview
 ```
 
-## Features
-- Persistent 3D sneaker stage behind a scroll-led story
-- Scroll progress changes shoe rotation, position and scale
-- Six colourful design palettes
-- Mesh discovery from the GLB at runtime
-- Colour controls for named mesh parts
-- Orbit interaction in the configurator
-- JSON export of selected design settings
-- Responsive mobile layout and reduced-motion-friendly CSS
+## 3D asset and loading
 
-## Important model notes
-The GLB is approximately 42.9 MB. It may take a while to load on slower connections; the app shows a loading state. For production, optimize the model and use meshopt/Draco only if you export and configure the decoder appropriately.
+- Repository asset: `models/nike shoes.glb`
+- File size reported by GitHub: **42,851,124 bytes** (about 42.9 MB decimal).
+- The runtime currently loads the model from the raw GitHub URL for this repository. This avoids referencing a root-level `models/` folder as if it were a Vite `public/` directory.
+- Drei's `useGLTF` cache is used for model loading.
+- At runtime, the scene is cloned before editable materials are changed. The original cached GLB materials are not directly recoloured.
+- The viewer calculates the GLB's bounding box, recentres the clone, and normalizes its maximum dimension before rendering. This makes framing more reliable when the source model's export units or origin are unexpected.
+- The model's real mesh and material names are discovered at runtime and shown in the parts list. Exact mesh counts, UV quality, triangle counts and texture inventory have not been independently audited yet; do not assume that every visible shoe region is a separate mesh.
 
-The effect selector currently provides the UI foundation for rainbow, drip and splatter effects. Accurate drip/splatter visuals require overlay artwork or UV masks. The colour picker uses the mesh material colour multiplier, so dark or strongly coloured base textures can affect the resulting colour.
+## Presets and customization
 
-The model is supplied by the repository owner. Make sure you have rights to use any third-party branded model and branding in a public commercial deployment.
+Six shared preset definitions are maintained in `src/Experience.tsx`: Chrome Bloom, Acid Garden, Blue Hour, Sunset Club, Digital Camo and Grape Soda. The homepage cards and studio read from these definitions.
+
+The material colour is changed on cloned materials, with the existing material colour retained as a multiplier. This can preserve texture detail, but the appearance depends on the source material's texture and base tint. A combined mesh cannot provide arbitrary independently editable surface regions without suitable separate geometry, material assignments or UV masks.
+
+The current studio supports runtime mesh discovery, preset selection, part colour controls and JSON export of the current palette/effect selection and per-mesh colour overrides.
+
+## Current limitations
+
+- The GLB has not yet had a full binary asset audit. Mesh hierarchy, UV coverage, texture maps, polygon counts and independent material regions still need to be inspected in a dedicated GLB viewer or asset-analysis script.
+- Rainbow, drip and splatter options in the current UI are not yet backed by complete UV-aware procedural surface shaders or decal masks. The UI currently describes this limitation; do not treat those options as production-ready surface effects.
+- Fullscreen, camera presets, robust undo/redo, validated JSON import, screenshot export and shareable design URLs still need implementation and verification.
+- A JSON export is a local configuration file, not a server-side saved design.
+- No build or browser automation result is documented here as passing unless it has actually been run against the current revision.
+
+## Performance and deployment
+
+The GLB is large, so loading time depends on connection speed and device capability. The app uses a loading state, a capped device pixel ratio, and a Vercel SPA rewrite in `vercel.json`. Model compression or texture optimization should only be applied after verifying the source asset and configuring matching decoders.
+
+Deploy using the repository's linked Vercel project once the integration has access to the correct team scope. After deployment, verify the production build, model loading, initial framing, configurator interactions and direct route navigation.
+
+## Usage rights
+
+The model is supplied by the repository owner. Confirm the rights to use any third-party branded model or branding before public commercial deployment.
