@@ -37,11 +37,11 @@ export function Cart() {
   function submit() {
     const buyer = name.trim();
     if (buyer.length < 2) {
-      setError("Add a name for the study note.");
+      setError("Enter your name to save this design.");
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setError("Add an email so the note has a name on it.");
+      setError("Enter a valid email address.");
       return;
     }
     setError(null);
@@ -51,12 +51,12 @@ export function Cart() {
   }
 
   return (
-    <aside className="cart" role="dialog" aria-label="Study cart">
+    <aside className="cart" role="dialog" aria-label="Your shopping bag">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <p className="inst-label">Study cart</p>
+          <p className="inst-label">YOUR BAG</p>
           <h2 className="mt-1 font-display text-xl italic leading-none text-bone">
-            {order ? "Noted" : count ? `${count} ${count === 1 ? "pair" : "pairs"}` : "Empty"}
+            {order ? "Design saved" : count ? `${count} ${count === 1 ? "pair" : "pairs"}` : "Your bag is empty"}
           </h2>
         </div>
         <button type="button" className="icon-btn" aria-label="Close cart" onClick={close}>
@@ -68,10 +68,10 @@ export function Cart() {
         <div>
           <p className="font-mono text-sm text-heat">{order.code}</p>
           <p className="mt-3 text-sm leading-relaxed text-bone">
-            Logged for {order.buyer}. {order.count} {order.count === 1 ? "pair" : "pairs"}, {money(order.total)}.
+            Design saved for {order.buyer}. {order.count} {order.count === 1 ? "pair" : "pairs"}, {money(order.total)}.
           </p>
           <p className="mt-3 text-sm leading-relaxed text-steel">
-            Nothing was charged. This is a portfolio study. The note stays in this session.
+            No payment was taken. This is a concept storefront; your order is saved only in this session.
           </p>
           {note.trim() && <p className="mt-3 font-mono text-xs text-bone">“{note.trim()}”</p>}
           <button
@@ -82,7 +82,7 @@ export function Cart() {
               useChamber.getState().clearOrder();
             }}
           >
-            Back to the bench
+            Back to customising
           </button>
         </div>
       ) : step === "details" ? (
@@ -94,7 +94,7 @@ export function Cart() {
           }}
         >
           <p className="text-sm leading-relaxed text-steel">
-            {money(total)} across {count} {count === 1 ? "pair" : "pairs"}. No card, no charge.
+            {money(total)} across {count} {count === 1 ? "pair" : "pairs"}. No payment is taken.
           </p>
           <label className="inst-label">
             Name
@@ -121,16 +121,16 @@ export function Cart() {
           )}
           <div className="flex flex-wrap gap-2">
             <button type="submit" className="mode-btn mode-btn-on">
-              Log the study
+              Save design
             </button>
             <button type="button" className="mode-btn" onClick={() => setStep("bag")}>
-              Back
+              Back to bag
             </button>
           </div>
         </form>
       ) : cart.length === 0 ? (
         <p className="text-sm leading-relaxed text-steel">
-          No pairs yet. Colour a panel, then add the shoe. The price follows the panels you touch.
+          Your bag is waiting. Choose a colourway, make it yours, then add your pair.
         </p>
       ) : (
         <div className="flex flex-col gap-3">
@@ -143,7 +143,7 @@ export function Cart() {
                       {line.name}, US {line.size}
                     </p>
                     <p className="mt-1 text-xs text-steel">
-                      {line.prints ? "Prints on" : "No prints"}, US {line.size}, {money(pairPrice(line.design, line.prints, line.size))}
+                      {line.prints ? "Prints on" : "No graphic print"}, US {line.size}, {money(pairPrice(line.design, line.prints, line.size))}
                     </p>
                   </div>
                   <p className="font-mono text-sm text-heat">{money(lineTotal(line))}</p>
@@ -179,14 +179,14 @@ export function Cart() {
             ))}
           </ul>
           <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
-            <p className="inst-label">Noted total</p>
+            <p className="inst-label">Subtotal</p>
             <p className="font-mono text-sm text-bone">{money(total)}</p>
           </div>
           <button type="button" className="mode-btn mode-btn-on" onClick={() => setStep("details")}>
-            Checkout
+            Review order
           </button>
           <p className="font-mono text-xs leading-relaxed text-steel">
-            Portfolio only. Checkout writes a note. It does not take payment.
+            Concept checkout only — no payment is collected.
           </p>
         </div>
       )}

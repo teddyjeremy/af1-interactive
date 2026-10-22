@@ -628,3 +628,57 @@ button:not(:disabled):hover {
 @media (prefers-reduced-motion: reduce) {
   .story-copy, .story-counter span, .end-action { animation: none; }
 }
+
+
+/* Retail finish: a warm, tactile customiser rather than a developer tool panel. */
+.brand-slash {
+  display: inline-block;
+  margin-inline: 0.12em;
+  color: var(--color-heat);
+  font-weight: 400;
+}
+.instrument {
+  overflow: hidden;
+  border-radius: 1.15rem;
+  border-color: color-mix(in srgb, var(--color-bone) 20%, transparent);
+  background:
+    radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--color-heat) 10%, transparent), transparent 40%),
+    linear-gradient(145deg, rgb(25 22 19 / 96%), rgb(8 8 8 / 96%));
+  box-shadow: 0 26px 100px rgb(0 0 0 / 54%), inset 0 1px 0 rgb(243 236 223 / 8%);
+}
+.dock-head {
+  gap: 0.65rem;
+  border-bottom: 1px solid rgb(243 236 223 / 9%);
+}
+.dock-head .inst-label {
+  margin-bottom: 0.2rem;
+  color: var(--color-heat);
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+}
+.inst-group {
+  padding-block: 0.3rem 0.7rem;
+}
+.inst-group + .inst-group {
+  border-top: 1px solid rgb(243 236 223 / 7%);
+  padding-top: 0.8rem;
+}
+.inst-label {
+  letter-spacing: 0.16em;
+}
+.chip {
+  min-height: 2.25rem;
+  border-color: rgb(243 236 223 / 15%);
+  background: rgb(243 236 223 / 3%);
+  padding-inline: 0.85rem;
+  font-size: 0.72rem;
+}
+.chip-on {
+  border-color: color-mix(in srgb, var(--color-heat) 72%, white);
+  background: color-mix(in srgb, var(--color-heat) 18%, #111);
+  color: var(--color-bone);
+}
+@media (max-width: 760px) {
+  .instrument { border-radius: 1rem; }
+  .dock-head { padding: 0.65rem; }
+}

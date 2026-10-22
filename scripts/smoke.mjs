@@ -7,13 +7,14 @@ const browser = await chromium.launch({
 });
 const failures = [];
 try {
-  const page = await browser.newPage({ viewport: { width: 800, height: 900 }, deviceScaleFactor: 1, reducedMotion: "reduce" });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1, reducedMotion: "reduce" });
   page.setDefaultTimeout(10000);
   page.setDefaultNavigationTimeout(15000);
   page.on("pageerror", (error) => failures.push(error.message));
   page.on("console", (message) => {
     if (message.type() === "warning" && message.text().includes("GLB panels missing")) failures.push(message.text());
   });
+
   await page.goto(baseURL, { waitUntil: "domcontentloaded" });
   await page.locator("canvas").waitFor({ state: "visible", timeout: 15000 });
   await page.waitForTimeout(1500);
@@ -22,54 +23,40 @@ try {
     element.scrollTop = element.scrollHeight;
     element.dispatchEvent(new Event("scroll", { bubbles: true }));
   });
-  const bench = page.getByRole("button", { name: "Bench", exact: true });
-  await bench.waitFor({ state: "visible", timeout: 10000 });
-  await bench.click({ force: true });
-  await page.getByText("Construction lab").waitFor({ state: "visible", timeout: 10000 });
+  const customise = page.getByRole("button", { name: "Customise yours", exact: true });
+  await customise.waitFor({ state: "visible", timeout: 10000 });
+  await customise.click({ force: true });
 
-  const explode = page.getByRole("button", { name: /Explode/ });
-  await explode.click({ force: true });
-  if ((await explode.getAttribute("aria-pressed")) !== "true") throw new Error("Explode control did not activate.");
-
-  await page.getByRole("slider", { name: "Explosion intensity" }).evaluate((element) => {
-    const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
-    setValue?.call(element, "0.55");
-    element.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-  await page.getByText("55%", { exact: true }).waitFor({ state: "visible", timeout: 3000 });
-
-  const assemble = page.getByRole("button", { name: /Assemble/ });
-  await assemble.click({ force: true });
-  if ((await assemble.getAttribute("aria-pressed")) !== "true") throw new Error("Assemble control did not activate.");
-
-  await page.getByRole("button", { name: /Hide selection/ }).click({ force: true });
-  const showSelection = page.getByRole("button", { name: /Show selection/ });
-  if (!(await showSelection.isEnabled())) throw new Error("Hide selection did not update the visibility control.");
-  await showSelection.click({ force: true });
-
-  await page.getByRole("slider", { name: "Studio lighting intensity" }).evaluate((element) => {
-    const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
-    setValue?.call(element, "1.25");
-    element.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-  await page.getByText("125%", { exact: true }).waitFor({ state: "visible", timeout: 3000 });
-
-  for (const label of ["Blueprint", "Turntable", "Light sweep"]) {
-    const control = page.getByRole("button", { name: new RegExp(label) });
-    await control.click({ force: true });
-    if ((await control.getAttribute("aria-pressed")) !== "true") throw new Error(`${label} control did not activate.`);
+  for (const label of ["MAKE IT YOURS", "Colourway", "Colour", "Finish", "Texture", "Angle", "Size"]) {
+    await page.getByText(label, { exact: true }).first().waitFor({ state: "visible", timeout: 5000 });
   }
-  await page.getByRole("button", { name: /Compare original/ }).click({ force: true });
-  const original = page.getByRole("button", { name: /Showing original/ });
-  if ((await original.getAttribute("aria-pressed")) !== "true") throw new Error("Original comparison did not activate.");
 
-  await page.getByRole("button", { name: "Pass", exact: true }).click({ force: true });
+  await page.getByRole("button", { name: "suede", exact: true }).click({ force: true });
+  await page.getByRole("button", { name: "Add to bag", exact: true }).click({ force: true });
+  await page.getByRole("dialog", { name: "Your shopping bag" }).waitFor({ state: "visible", timeout: 5000 });
+  await page.getByRole("button", { name: "Review order", exact: true }).waitFor({ state: "visible", timeout: 5000 });
+  await page.getByRole("button", { name: "Review order", exact: true }).click({ force: true });
+  await page.getByText(/No payment is taken/).waitFor({ state: "visible", timeout: 5000 });
+  await page.getByLabel("Name", { exact: true }).fill("Test Buyer");
+  await page.getByLabel("Email", { exact: true }).fill("test@example.com");
+  await page.getByRole("button", { name: "Save design", exact: true }).click({ force: true });
+  await page.getByText(/This is a concept storefront/).waitFor({ state: "visible", timeout: 5000 });
+
+  await page.getByRole("button", { name: "Back to customising", exact: true }).click({ force: true });
+  await page.getByRole("button", { name: "Discover", exact: true }).click({ force: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(300);
-  await page.getByText("Chamber", { exact: true }).first().waitFor({ state: "visible", timeout: 5000 });
+  await page.getByText("CHAMBER", { exact: false }).first().waitFor({ state: "visible", timeout: 5000 });
+  const dimensions = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    document: document.documentElement.scrollWidth,
+  }));
+  if (dimensions.document > dimensions.viewport + 1) {
+    throw new Error(`Mobile page overflows horizontally: ${dimensions.document}px > ${dimensions.viewport}px`);
+  }
 
   if (failures.length) throw new Error(`Browser errors: ${failures.join(" | ")}`);
-  console.log("PASS: desktop 3D scene loaded; explode/assemble, intensity, blueprint, turntable, light sweep and original comparison responded; mobile canvas has no horizontal overflow.");
+  console.log("PASS: 3D scene loaded; customiser labels and finish selection work; add-to-bag and concept checkout work; mobile layout has no horizontal overflow.");
 } finally {
   await browser.close();
 }

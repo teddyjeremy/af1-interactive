@@ -354,7 +354,7 @@ export function Chamber() {
         ) : (
           <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
             <p className="max-w-sm text-sm text-steel">
-              {mounted ? "WebGL is required." : "Opening"}
+              {mounted ? "This experience needs WebGL enabled." : "Getting your pair ready"}
             </p>
           </div>
         )}
@@ -362,13 +362,13 @@ export function Chamber() {
 
         <header className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 px-5 py-4 md:px-8">
           <div>
-            <p className="wordmark text-bone">Chamber</p>
-            {mode === "pass" && !ready && <p className="eyebrow">Scroll</p>}
+            <p className="wordmark text-bone">CHAMBER <span className="brand-slash">/</span> AF-1</p>
+            {mode === "pass" && !ready && <p className="eyebrow">Discover the details</p>}
           </div>
           <div className="flex gap-2">
             {mode === "bench" && (
               <button type="button" className="mode-btn" onClick={leaveBench}>
-                Pass
+                Discover
               </button>
             )}
             <button
@@ -377,7 +377,7 @@ export function Chamber() {
               onClick={openCart}
               aria-pressed={cartOpen}
             >
-              Cart{cartCount ? ` ${cartCount}` : ""}
+              Bag{cartCount ? ` ${cartCount}` : ""}
             </button>
           </div>
         </header>
@@ -386,23 +386,23 @@ export function Chamber() {
           <div className={`story-overlay story-stage-${storyStage}`} aria-live="polite">
             <div className="story-kicker">
               <span className="story-live-dot" />
-              <span>{["THE ORIGINAL / 1982", "MATERIAL STUDY / 01", "FORM & FUNCTION / 02", "COLOUR IN MOTION / 03", "YOUR PAIR / 04"][storyStage]}</span>
+              <span>{["THE ORIGINAL / 1982", "THE DETAILS / 01", "BUILT DIFFERENT / 02", "MAKE A STATEMENT / 03", "MADE BY YOU / 04"][storyStage]}</span>
             </div>
             <div key={storyStage} className="story-copy">
               <p className="story-index">0{storyStage + 1} <span>/ 05</span></p>
               <h1>{[
-                <>A legend.<br /><em>Unboxed.</em></>,
-                <>Made to<br /><em>move.</em></>,
-                <>Every line<br /><em>has a reason.</em></>,
-                <>Colour<br /><em>changes everything.</em></>,
-                <>Make it<br /><em>your own.</em></>,
+                <>An icon.<br /><em>Rewritten.</em></>,
+                <>Made for<br /><em>your world.</em></>,
+                <>Look closer.<br /><em>Feel more.</em></>,
+                <>Your colour.<br /><em>Your rules.</em></>,
+                <>One icon.<br /><em>Your signature.</em></>,
               ][storyStage]}</h1>
               <p className="story-description">{[
-                "An icon of the court, reimagined as an immersive 3D study. Take your time. Look closer.",
-                "Follow the silhouette as the camera moves around the leather, stitching, and unmistakable shape.",
-                "Watch the construction come apart, then settle back into place. Nothing is hidden from the light.",
-                "A new colourway, a new attitude. The materials shift as you move through the story.",
-                "You have seen the form. Now make it yours in the custom studio.",
+                "The Air Force 1. A timeless silhouette, ready for a new point of view. Start with the details.",
+                "Premium textures, considered details, and a profile that never needs an introduction.",
+                "Every layer lifts into the light, takes a full turn, then locks back into its unmistakable shape.",
+                "Go tonal, go bold, or build a colour story that is entirely yours.",
+                "Choose your colourway, finish, texture and size. Your pair, your call.",
               ][storyStage]}</p>
             </div>
             <div className="story-footer">
@@ -416,14 +416,14 @@ export function Chamber() {
                   }} />
                 ))}
               </div>
-              <span className="story-counter">SCROLL TO EXPLORE <span>↓</span></span>
+              <span className="story-counter">SCROLL TO DISCOVER <span>↓</span></span>
             </div>
           </div>
         )}
 
         {mode === "pass" && ready && (
           <button type="button" className="mode-btn mode-btn-on end-action" onClick={openBench}>
-            Bench
+            Customise yours
           </button>
         )}
 
@@ -431,7 +431,7 @@ export function Chamber() {
 
         {opening && (
           <p className="pointer-events-none absolute top-20 left-5 z-20 text-xs text-steel md:left-8">
-            Opening {Math.round(progress)}%
+            Getting things ready {Math.round(progress)}%
           </p>
         )}
 
@@ -440,7 +440,7 @@ export function Chamber() {
         {mode === "bench" && !sheet && style && (
           <div className="rail">
             <button type="button" className="chip chip-on" aria-expanded={false} onClick={toggleSheet}>
-              Edit
+              Customise
             </button>
             <span className="swatch" style={{ background: style.color }} />
             <p className="min-w-0 text-sm text-bone">
@@ -455,26 +455,27 @@ export function Chamber() {
             <div className="instrument">
               <div className="dock-head">
                 <div className="min-w-0 flex-1">
+                  <p className="inst-label">MAKE IT YOURS</p>
                   <p className="truncate text-sm text-bone">{design.name}</p>
                   <p className="truncate text-xs text-steel">
                     {partLabel}
-                    {isolated ? " isolated" : ""}
+                    {isolated ? " · focused" : ""}
                   </p>
                 </div>
                 <p className="text-sm text-bone">{money(total)}</p>
                 <button type="button" className="chip" aria-expanded onClick={toggleSheet}>
                   <ChevronDown />
-                  Hide
+                  Minimise
                 </button>
                 <button type="button" className="chip chip-on" onClick={addPair}>
-                  Add
+                  Add to bag
                 </button>
               </div>
 
               {style && (
                 <div className="inst-scroll">
                   <div className="inst-group">
-                    <p className="inst-label">Material</p>
+                    <p className="inst-label">Colourway</p>
                   <div className="flex items-center gap-2 overflow-x-auto">
                     {PRESETS.map((preset, index) => (
                       <button
@@ -556,7 +557,7 @@ export function Chamber() {
                   </div>
                   </div>
                   <div className="inst-group">
-                    <p className="inst-label">Surface</p>
+                    <p className="inst-label">Finish</p>
                     <div className="flex flex-wrap gap-2">
                       {FINISHES.map((finish) => (
                         <button
@@ -571,7 +572,7 @@ export function Chamber() {
                     </div>
                   </div>
                   <div className="inst-group">
-                    <p className="inst-label">Treatment</p>
+                    <p className="inst-label">Texture</p>
                     <div className="flex flex-wrap gap-2">
                       {TREATMENTS.map((treatment) => (
                         <button
@@ -589,11 +590,11 @@ export function Chamber() {
                         onClick={() => useChamber.getState().setPrints(!prints)}
                         aria-pressed={prints}
                       >
-                        Prints
+                        Graphic print
                       </button>
                       {isolated && (
                         <button type="button" className="chip" onClick={() => useChamber.getState().isolate(null)}>
-                          Release
+                          Show all
                         </button>
                       )}
                     </div>
@@ -616,7 +617,7 @@ export function Chamber() {
                   </div>
                   </div>
                   <div className="inst-group">
-                    <p className="inst-label">View</p>
+                    <p className="inst-label">Angle</p>
                   <div className="flex flex-wrap gap-2">
                     {CAMERAS.map((item) => (
                       <button
@@ -659,7 +660,7 @@ export function Chamber() {
                   </div>
                   <div className="inst-group">
                     <div className="price-row">
-                      <p className="inst-label">Price</p>
+                      <p className="inst-label">Your pair</p>
                       <p className="text-sm text-bone">
                         {money(total)}
                         {delta !== 0 ? ` ${drift(delta)}` : ""}
@@ -731,12 +732,12 @@ function Knife({ value, onChange }: { value: number; onChange: (value: number) =
 
   return (
     <div className="absolute top-1/2 right-3 z-20 flex -translate-y-1/2 flex-col items-center gap-3 md:right-6">
-      <p className="knife-label">Knife</p>
+      <p className="knife-label">Cutaway</p>
       <div
         ref={track}
         role="slider"
         tabIndex={0}
-        aria-label="Knife"
+        aria-label="Cutaway view"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(value * 100)}
