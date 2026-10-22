@@ -7,7 +7,7 @@ const browser = await chromium.launch({
 });
 const failures = [];
 try {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, reducedMotion: "reduce" });
+  const page = await browser.newPage({ viewport: { width: 800, height: 900 }, deviceScaleFactor: 1, reducedMotion: "reduce" });
   page.setDefaultTimeout(10000);
   page.setDefaultNavigationTimeout(15000);
   page.on("pageerror", (error) => failures.push(error.message));
