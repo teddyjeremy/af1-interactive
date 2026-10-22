@@ -159,11 +159,7 @@ export function Shoe({
     }
     if (chamber.mode !== "bench") sequenceStart.current = null;
 
-    const scroll = progressRef.current ?? 0;
-    // The campaign still runs its scroll-led orbit. In Customize, the signature
-    // sequence takes over: explode, rotate while separated, then reassemble.
-    const rise = THREE.MathUtils.smoothstep(scroll, 0.18, 0.32);
-    const settle = 1 - THREE.MathUtils.smoothstep(scroll, 0.50, 0.59);
+    // Keep the shoe composed during browsing. The optional reveal below is the only exploded motion.
     const cinematicExplosion = 0;
     let sequenceExplosion: number | null = null;
     if (sequenceStart.current !== null) {
