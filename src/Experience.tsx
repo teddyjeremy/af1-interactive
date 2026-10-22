@@ -32,7 +32,6 @@ function normalizeName(name: string) {
 
 function Shoe({ progress, designIndex, customColors, selectedPart, finish, onParts, onSelectPart, onReady, interactive = false }: {
   progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null; finish: string;
-  cameraPreset?: string; cameraResetToken?: number;
   onParts: (parts: PartInfo[]) => void; onSelectPart: (name: string) => void; onReady: (ready: boolean) => void; interactive?: boolean
 }) {
   const { scene } = useGLTF('https://raw.githubusercontent.com/teddyjeremy/af1-interactive/main/models/nike%20shoes.glb')
@@ -144,6 +143,7 @@ function Loading() {
 
 export default function Experience({ progress, designIndex, customColors, selectedPart, finish, cameraPreset = 'three-quarter', cameraResetToken = 0, onParts, onSelectPart, onReady, interactive = false }: {
   progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null; finish: string;
+  cameraPreset?: string; cameraResetToken?: number;
   onParts: (parts: PartInfo[]) => void; onSelectPart: (name: string) => void; onReady: (ready: boolean) => void; interactive?: boolean
 }) {
   const { scene } = useGLTF('https://raw.githubusercontent.com/teddyjeremy/af1-interactive/main/models/nike%20shoes.glb')
