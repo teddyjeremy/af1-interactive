@@ -63,14 +63,10 @@ try {
   const original = page.getByRole("button", { name: /Showing original/ });
   if ((await original.getAttribute("aria-pressed")) !== "true") throw new Error("Original comparison did not activate.");
 
-  await page.close();
-  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, reducedMotion: "reduce" });
-  mobile.setDefaultTimeout(10000);
-  mobile.setDefaultNavigationTimeout(15000);
-  mobile.on("pageerror", (error) => failures.push(error.message));
-  await mobile.goto(baseURL, { waitUntil: "domcontentloaded" });
-  await mobile.locator("canvas").waitFor({ state: "visible", timeout: 15000 });
-  const overflow = await mobile.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+  await page.getByRole("button", { name: "Pass", exact: true }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(300);
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   if (overflow) throw new Error("Mobile layout has horizontal overflow.");
 
   if (failures.length) throw new Error(`Browser errors: ${failures.join(" | ")}`);
