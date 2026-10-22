@@ -451,7 +451,7 @@ export function Chamber() {
         )}
 
         {mode === "bench" && sheet && (
-          <div className="absolute inset-x-0 bottom-0 z-20 px-3 pr-16 pb-3 md:px-8 md:pr-20 md:pb-5">
+          <div className="customizer-panel">
             <div className="instrument">
               <div className="dock-head">
                 <div className="min-w-0 flex-1">
