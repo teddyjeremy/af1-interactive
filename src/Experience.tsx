@@ -32,6 +32,7 @@ function normalizeName(name: string) {
 
 function Shoe({ progress, designIndex, customColors, selectedPart, finish, onParts, onSelectPart, onReady, interactive = false }: {
   progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null; finish: string;
+  cameraPreset?: string; cameraResetToken?: number;
   onParts: (parts: PartInfo[]) => void; onSelectPart: (name: string) => void; onReady: (ready: boolean) => void; interactive?: boolean
 }) {
   const { scene } = useGLTF('https://raw.githubusercontent.com/teddyjeremy/af1-interactive/main/models/nike%20shoes.glb')
@@ -141,17 +142,33 @@ function Loading() {
   return <Html center><div className="loading-model"><span className="loading-dot" /> LOADING YOUR CANVAS</div></Html>
 }
 
-export default function Experience({ progress, designIndex, customColors, selectedPart, finish, onParts, onSelectPart, onReady, interactive = false }: {
+export default function Experience({ progress, designIndex, customColors, selectedPart, finish, cameraPreset = 'three-quarter', cameraResetToken = 0, onParts, onSelectPart, onReady, interactive = false }: {
   progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null; finish: string;
   onParts: (parts: PartInfo[]) => void; onSelectPart: (name: string) => void; onReady: (ready: boolean) => void; interactive?: boolean
 }) {
   const { scene } = useGLTF('https://raw.githubusercontent.com/teddyjeremy/af1-interactive/main/models/nike%20shoes.glb')
+  const controlsRef = useRef<any>(null)
   const cameraDistance = useMemo(() => {
     const bounds = new THREE.Box3().setFromObject(scene)
     const size = bounds.getSize(new THREE.Vector3())
     const maxDimension = Math.max(size.x, size.y, size.z, 0.001)
     return Math.max(3.8, (maxDimension * (2.85 / maxDimension)) * 1.45)
   }, [scene])
+
+  useEffect(() => {
+    if (!controlsRef.current) return
+    const positions: Record<string, [number, number, number]> = {
+      side: [0, 0.18, cameraDistance],
+      'three-quarter': [cameraDistance * 0.72, cameraDistance * 0.28, cameraDistance * 0.72],
+      front: [cameraDistance, 0.12, 0],
+      rear: [-cameraDistance, 0.12, 0],
+      top: [0, cameraDistance, 0.08],
+    }
+    const position = positions[cameraPreset] ?? positions['three-quarter']
+    controlsRef.current.object.position.set(position[0], position[1], position[2])
+    controlsRef.current.target.set(0, 0, 0)
+    controlsRef.current.update()
+  }, [cameraPreset, cameraResetToken, cameraDistance])
 
   return <Canvas
     shadows
@@ -173,6 +190,7 @@ export default function Experience({ progress, designIndex, customColors, select
       <ContactShadows position={[0, -1.05, 0]} opacity={0.3} scale={5} blur={2.2} far={3.5} />
     </Suspense>
     <OrbitControls
+      ref={controlsRef}
       enabled={interactive}
       enablePan={false}
       enableDamping
