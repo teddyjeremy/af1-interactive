@@ -88,10 +88,13 @@ function Rig({
   const floor = useRef<THREE.Group>(null);
   const key = useRef<THREE.DirectionalLight>(null);
   const rim = useRef<THREE.DirectionalLight>(null);
+  const spot = useRef<THREE.SpotLight>(null);
+  const hemi = useRef<THREE.HemisphereLight>(null);
   const flying = useRef(true);
   const mode = useChamber((s) => s.mode);
   const cameraPreset = useChamber((s) => s.camera);
   const cameraNonce = useChamber((s) => s.cameraNonce);
+  const lighting = useChamber((s) => s.lighting);
   const { camera, gl } = useThree();
 
   useEffect(() => {
@@ -146,15 +149,18 @@ function Rig({
       controls.current.enabled = true;
     }
 
-    if (key.current) key.current.intensity = chamber.mode === "pass" ? 1.7 : 1.45;
-    if (rim.current) rim.current.intensity = 0.32;
+    if (key.current) key.current.intensity = (chamber.mode === "pass" ? 1.7 : 1.45) * chamber.lighting;
+    if (rim.current) rim.current.intensity = 0.32 * chamber.lighting;
+    if (spot.current) spot.current.intensity = 26 * chamber.lighting;
+    if (hemi.current) hemi.current.intensity = 0.28 * chamber.lighting;
   });
 
   return (
     <>
       <color attach="background" args={["#090909"]} />
-      <hemisphereLight args={["#f4efe4", "#14110e", 0.28]} />
+      <hemisphereLight ref={hemi} args={["#f4efe4", "#14110e", 0.28]} />
       <spotLight
+        ref={spot}
         position={[0.2, 7.4, 2.6]}
         angle={0.34}
         penumbra={1}
@@ -191,9 +197,17 @@ function Rig({
             <circleGeometry args={[4.2, 64]} />
             <meshStandardMaterial color="#141311" roughness={1} metalness={0} />
           </mesh>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.006, 0]}>
+            <ringGeometry args={[1.42, 1.435, 96]} />
+            <meshBasicMaterial color="#c45c26" transparent opacity={0.42} depthWrite={false} />
+          </mesh>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, 0]}>
+            <ringGeometry args={[1.62, 1.626, 96]} />
+            <meshBasicMaterial color="#a39888" transparent opacity={0.2} depthWrite={false} />
+          </mesh>
         </group>
       </group>
-      <Environment resolution={128} environmentIntensity={0.42}>
+      <Environment resolution={128} environmentIntensity={0.42 * lighting}>
         <Lightformer form="rect" intensity={1.4} position={[0, 3.6, -1.5]} scale={[5, 1.2, 1]} color="#fffaf4" />
         <Lightformer form="rect" intensity={0.35} position={[-3.2, 1.6, 1.2]} scale={[1.2, 2.2, 1]} color="#f3ecdf" />
         <Lightformer form="rect" intensity={0.45} position={[3.4, 1.2, 2]} scale={[1, 2.2, 1]} color="#f7f4ee" />
