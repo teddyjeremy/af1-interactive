@@ -175,7 +175,7 @@ function Rig({
 
   return (
     <>
-      <color attach="background" args={["#090909"]} />
+      <color attach="background" args={["#f3f1eb"]} />
       <hemisphereLight ref={hemi} args={["#f4efe4", "#14110e", 0.28]} />
       <spotLight
         ref={spot}
@@ -213,21 +213,21 @@ function Rig({
         <group ref={floor}>
           <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
             <circleGeometry args={[4.2, 64]} />
-            <meshStandardMaterial color="#141311" roughness={1} metalness={0} />
+            <meshStandardMaterial color="#e2dfd6" roughness={1} metalness={0} />
           </mesh>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.006, 0]}>
             <ringGeometry args={[1.42, 1.435, 96]} />
-            <meshBasicMaterial color="#c45c26" transparent opacity={0.42} depthWrite={false} />
+            <meshBasicMaterial color="#ed4b24" transparent opacity={0.42} depthWrite={false} />
           </mesh>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, 0]}>
             <ringGeometry args={[1.62, 1.626, 96]} />
-            <meshBasicMaterial color="#a39888" transparent opacity={0.2} depthWrite={false} />
+            <meshBasicMaterial color="#a8a69e" transparent opacity={0.2} depthWrite={false} />
           </mesh>
         </group>
       </group>
       <Environment resolution={128} environmentIntensity={0.42 * lighting}>
         <Lightformer form="rect" intensity={1.4} position={[0, 3.6, -1.5]} scale={[5, 1.2, 1]} color="#fffaf4" />
-        <Lightformer form="rect" intensity={0.35} position={[-3.2, 1.6, 1.2]} scale={[1.2, 2.2, 1]} color="#f3ecdf" />
+        <Lightformer form="rect" intensity={0.35} position={[-3.2, 1.6, 1.2]} scale={[1.2, 2.2, 1]} color="#fbfaf7" />
         <Lightformer form="rect" intensity={0.45} position={[3.4, 1.2, 2]} scale={[1, 2.2, 1]} color="#f7f4ee" />
       </Environment>
       <OrbitControls
@@ -277,7 +277,7 @@ export function Scene({
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping;
         gl.toneMappingExposure = 0.96;
-        gl.setClearColor("#090909");
+        gl.setClearColor("#f3f1eb");
       }}
     >
       <Rig progressRef={progressRef} fitRef={fitRef} shellPlane={shellPlane} lastPlane={lastPlane} />
