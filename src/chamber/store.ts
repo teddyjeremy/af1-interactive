@@ -52,6 +52,7 @@ type ChamberState = {
   endEdit: () => void;
   applyPreset: (index: number) => void;
   randomizeColorway: () => void;
+  applyColorToAll: (color: string) => void;
   undo: () => void;
   redo: () => void;
   reset: () => void;
@@ -166,6 +167,13 @@ export const useChamber = create<ChamberState>((set, get) => ({
       edited: true,
       notice: null,
     });
+  },
+  applyColorToAll: (color) => {
+    const current = get().design;
+    const next = cloneDesign(current);
+    for (const id of PARTS) next.parts[id] = { ...next.parts[id], color };
+    next.name = "Custom";
+    set({ past: pushHistory(get().past, current), future: [], design: next, edited: true, notice: "Colour applied to every part." });
   },
   randomizeColorway: () => {
     const current = get().design;
