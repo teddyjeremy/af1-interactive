@@ -168,13 +168,6 @@ export function Chamber() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  function leaveBench() {
-    useChamber.getState().setMode("pass");
-    const el = scroller.current;
-    if (!el) return;
-    el.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
-  }
-
   function edit(patch: Partial<PartStyle>) {
     const store = useChamber.getState();
     store.beginEdit();
