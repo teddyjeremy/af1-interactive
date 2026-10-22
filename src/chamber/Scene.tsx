@@ -119,12 +119,12 @@ function Rig({
     const d = Math.min(delta, 0.08);
     const chamber = useChamber.getState();
     const reduced = chamber.reduced;
-    const lambda = reduced ? 16 : mode === "pass" ? 3.4 : 4.2;
+    const lambda = reduced ? 16 : mode === "pass" ? 2.4 : 3.2;
     const fit = fitRef.current;
     const distance = frameDistance(fit.radius || 1.25);
     const narrow = window.innerWidth < 780;
     const lift = chamber.mode === "bench" ? (narrow ? 0.02 : 0.58) : 0.14;
-    const bob = chamber.mode === "pass" && !reduced ? Math.sin(state.clock.elapsedTime * 0.45) * 0.01 : 0;
+    const bob = 0;
 
     if (presentation.current) {
       presentation.current.position.x = THREE.MathUtils.damp(presentation.current.position.x, 0, lambda, d);
@@ -132,8 +132,6 @@ function Rig({
       const scroll = progressRef.current ?? 0;
       if (chamber.mode === "bench" && chamber.turntable && !reduced) {
         presentation.current.rotation.y += d * 0.34;
-      } else if (chamber.mode === "pass" && !reduced && scroll > 0.74 && scroll < 0.94) {
-        presentation.current.rotation.y = THREE.MathUtils.lerp(-0.08, 0.42, THREE.MathUtils.smoothstep(scroll, 0.74, 0.94));
       } else {
         presentation.current.rotation.y = THREE.MathUtils.damp(presentation.current.rotation.y, 0, 5, d);
       }
@@ -165,10 +163,8 @@ function Rig({
     if (key.current) key.current.intensity = (chamber.mode === "pass" ? 1.7 : 1.45) * chamber.lighting;
     if (rim.current) rim.current.intensity = 0.32 * chamber.lighting;
     if (spot.current) {
-      const scroll = progressRef.current ?? 0;
       spot.current.intensity = 26 * chamber.lighting * (chamber.mode === "pass" ? 0.82 + 0.55 * Math.sin(Math.PI * scroll) : 1);
-      const automaticSweep = chamber.mode === "pass" && scroll > 0.6 && scroll < 0.82;
-      if (((chamber.mode === "bench" && chamber.inspection) || automaticSweep) && !reduced) {
+      if (chamber.mode === "bench" && chamber.inspection && !reduced) {
         const sweep = state.clock.elapsedTime * 0.62;
         spot.current.position.set(Math.sin(sweep) * 3.6, 5.1, Math.cos(sweep) * 3.2);
       } else {
