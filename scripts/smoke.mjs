@@ -37,6 +37,18 @@ try {
   await assemble.click();
   if ((await assemble.getAttribute("aria-pressed")) !== "true") throw new Error("Assemble control did not activate.");
 
+  await page.getByRole("button", { name: /Hide selection/ }).click();
+  const showSelection = page.getByRole("button", { name: /Show selection/ });
+  if (!(await showSelection.isEnabled())) throw new Error("Hide selection did not update the visibility control.");
+  await showSelection.click();
+
+  await page.getByRole("slider", { name: "Studio lighting intensity" }).evaluate((element) => {
+    element.value = "1.25";
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+    element.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await page.getByText("125%", { exact: true }).waitFor({ state: "visible", timeout: 3000 });
+
   for (const label of ["Blueprint", "Turntable", "Light sweep"]) {
     const control = page.getByRole("button", { name: new RegExp(label) });
     await control.click();
