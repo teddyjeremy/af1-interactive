@@ -354,7 +354,7 @@ export function Chamber() {
         ) : (
           <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
             <p className="max-w-sm text-sm text-steel">
-              {mounted ? "WebGL is required." : "Opening"}
+              {mounted ? "This experience needs WebGL enabled." : "Getting your pair ready"}
             </p>
           </div>
         )}
@@ -455,6 +455,7 @@ export function Chamber() {
             <div className="instrument">
               <div className="dock-head">
                 <div className="min-w-0 flex-1">
+                  <p className="inst-label">MAKE IT YOURS</p>
                   <p className="truncate text-sm text-bone">{design.name}</p>
                   <p className="truncate text-xs text-steel">
                     {partLabel}
@@ -659,7 +660,7 @@ export function Chamber() {
                   </div>
                   <div className="inst-group">
                     <div className="price-row">
-                      <p className="inst-label">Price</p>
+                      <p className="inst-label">Your pair</p>
                       <p className="text-sm text-bone">
                         {money(total)}
                         {delta !== 0 ? ` ${drift(delta)}` : ""}
@@ -731,12 +732,12 @@ function Knife({ value, onChange }: { value: number; onChange: (value: number) =
 
   return (
     <div className="absolute top-1/2 right-3 z-20 flex -translate-y-1/2 flex-col items-center gap-3 md:right-6">
-      <p className="knife-label">Knife</p>
+      <p className="knife-label">Cutaway</p>
       <div
         ref={track}
         role="slider"
         tabIndex={0}
-        aria-label="Knife"
+        aria-label="Cutaway view"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(value * 100)}
