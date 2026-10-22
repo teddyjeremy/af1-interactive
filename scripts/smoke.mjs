@@ -7,13 +7,15 @@ const browser = await chromium.launch({
 });
 const failures = [];
 try {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, reducedMotion: "reduce" });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, reducedMotion: "reduce" });
+  page.setDefaultTimeout(10000);
+  page.setDefaultNavigationTimeout(15000);
   page.on("pageerror", (error) => failures.push(error.message));
   page.on("console", (message) => {
     if (message.type() === "warning" && message.text().includes("GLB panels missing")) failures.push(message.text());
   });
   await page.goto(baseURL, { waitUntil: "domcontentloaded" });
-  await page.locator("canvas").waitFor({ state: "visible", timeout: 30000 });
+  await page.locator("canvas").waitFor({ state: "visible", timeout: 15000 });
   await page.waitForTimeout(1500);
 
   await page.locator("div.h-dvh").first().evaluate((element) => {
@@ -61,10 +63,13 @@ try {
   const original = page.getByRole("button", { name: /Showing original/ });
   if ((await original.getAttribute("aria-pressed")) !== "true") throw new Error("Original comparison did not activate.");
 
-  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
+  await page.close();
+  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, reducedMotion: "reduce" });
+  mobile.setDefaultTimeout(10000);
+  mobile.setDefaultNavigationTimeout(15000);
   mobile.on("pageerror", (error) => failures.push(error.message));
   await mobile.goto(baseURL, { waitUntil: "domcontentloaded" });
-  await mobile.locator("canvas").waitFor({ state: "visible", timeout: 30000 });
+  await mobile.locator("canvas").waitFor({ state: "visible", timeout: 15000 });
   const overflow = await mobile.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   if (overflow) throw new Error("Mobile layout has horizontal overflow.");
 
