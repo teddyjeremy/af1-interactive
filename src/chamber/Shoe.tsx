@@ -151,10 +151,17 @@ export function Shoe({
     const knife = chamber.knife;
     prepared.last.visible = knife > 0.015;
     const scroll = progressRef.current ?? 0;
-    const rise = THREE.MathUtils.smoothstep(scroll, 0.17, 0.34);
-    const fall = 1 - THREE.MathUtils.smoothstep(scroll, 0.37, 0.51);
-    const cinematicExplosion = Math.min(rise, fall) * 0.92;
+    // The campaign sequence is choreographed in three beats: pull apart, orbit,
+    // then click back into place. The complete orbit happens while the shoe is exploded.
+    const rise = THREE.MathUtils.smoothstep(scroll, 0.18, 0.32);
+    const settle = 1 - THREE.MathUtils.smoothstep(scroll, 0.50, 0.59);
+    const cinematicExplosion = rise * settle * 0.96;
     const explosion = chamber.mode === "bench" ? chamber.explosion : cinematicExplosion;
+    const orbit = THREE.MathUtils.smoothstep(scroll, 0.31, 0.50) * Math.PI * 2;
+    group.rotation.y =
+      chamber.mode === "pass" && !chamber.reduced
+        ? orbit
+        : THREE.MathUtils.damp(group.rotation.y, 0, 5, d);
     const hiddenParts = new Set(chamber.mode === "bench" ? chamber.hiddenParts : []);
     for (const panel of prepared.panels) {
       panel.object.position.x = THREE.MathUtils.damp(panel.object.position.x, panel.origin.x + panel.explode.x * explosion, 8, d);
