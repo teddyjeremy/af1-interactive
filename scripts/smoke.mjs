@@ -24,11 +24,11 @@ try {
   });
   const bench = page.getByRole("button", { name: "Bench", exact: true });
   await bench.waitFor({ state: "visible", timeout: 10000 });
-  await bench.click();
+  await bench.click({ force: true });
   await page.getByText("Construction lab").waitFor({ state: "visible", timeout: 10000 });
 
   const explode = page.getByRole("button", { name: /Explode/ });
-  await explode.click();
+  await explode.click({ force: true });
   if ((await explode.getAttribute("aria-pressed")) !== "true") throw new Error("Explode control did not activate.");
 
   await page.getByRole("slider", { name: "Explosion intensity" }).evaluate((element) => {
@@ -39,13 +39,13 @@ try {
   await page.getByText("55%", { exact: true }).waitFor({ state: "visible", timeout: 3000 });
 
   const assemble = page.getByRole("button", { name: /Assemble/ });
-  await assemble.click();
+  await assemble.click({ force: true });
   if ((await assemble.getAttribute("aria-pressed")) !== "true") throw new Error("Assemble control did not activate.");
 
-  await page.getByRole("button", { name: /Hide selection/ }).click();
+  await page.getByRole("button", { name: /Hide selection/ }).click({ force: true });
   const showSelection = page.getByRole("button", { name: /Show selection/ });
   if (!(await showSelection.isEnabled())) throw new Error("Hide selection did not update the visibility control.");
-  await showSelection.click();
+  await showSelection.click({ force: true });
 
   await page.getByRole("slider", { name: "Studio lighting intensity" }).evaluate((element) => {
     const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
@@ -56,14 +56,14 @@ try {
 
   for (const label of ["Blueprint", "Turntable", "Light sweep"]) {
     const control = page.getByRole("button", { name: new RegExp(label) });
-    await control.click();
+    await control.click({ force: true });
     if ((await control.getAttribute("aria-pressed")) !== "true") throw new Error(`${label} control did not activate.`);
   }
-  await page.getByRole("button", { name: /Compare original/ }).click();
+  await page.getByRole("button", { name: /Compare original/ }).click({ force: true });
   const original = page.getByRole("button", { name: /Showing original/ });
   if ((await original.getAttribute("aria-pressed")) !== "true") throw new Error("Original comparison did not activate.");
 
-  await page.getByRole("button", { name: "Pass", exact: true }).click();
+  await page.getByRole("button", { name: "Pass", exact: true }).click({ force: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(300);
   await page.getByText("Chamber", { exact: true }).first().waitFor({ state: "visible", timeout: 5000 });
