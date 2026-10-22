@@ -30,8 +30,8 @@ function normalizeName(name: string) {
   return name.replace(/^AF1[_\s-]*/i, '').replaceAll('_', ' ').replace(/([a-z])([A-Z])/g, '$1 $2').trim()
 }
 
-function Shoe({ progress, designIndex, customColors, selectedPart, onParts, onSelectPart, onReady, interactive = false }: {
-  progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null;
+function Shoe({ progress, designIndex, customColors, selectedPart, finish, onParts, onSelectPart, onReady, interactive = false }: {
+  progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null; finish: string;
   onParts: (parts: PartInfo[]) => void; onSelectPart: (name: string) => void; onReady: (ready: boolean) => void; interactive?: boolean
 }) {
   const { scene } = useGLTF('https://raw.githubusercontent.com/teddyjeremy/af1-interactive/main/models/nike%20shoes.glb')
@@ -94,10 +94,20 @@ function Shoe({ progress, designIndex, customColors, selectedPart, onParts, onSe
         const original = mat.userData.af1OriginalColor as string | undefined
         mat.color.set('#' + (original ?? 'f5f0e6'))
         mat.color.multiply(new THREE.Color(custom || designColor))
+        const finishSettings: Record<string, { roughness: number; metalness: number }> = {
+          matte: { roughness: 0.92, metalness: 0.02 },
+          satin: { roughness: 0.55, metalness: 0.04 },
+          gloss: { roughness: 0.28, metalness: 0.06 },
+          'high-gloss': { roughness: 0.12, metalness: 0.08 },
+          metallic: { roughness: 0.24, metalness: 0.72 },
+        }
+        const selectedFinish = finishSettings[finish] ?? finishSettings.satin
+        if ('roughness' in mat) mat.roughness = selectedFinish.roughness
+        if ('metalness' in mat) mat.metalness = selectedFinish.metalness
         mat.needsUpdate = true
       })
     })
-  }, [prepared, designIndex, customColors, selectedPart])
+  }, [prepared, designIndex, customColors, selectedPart, finish])
 
   useFrame((state, delta) => {
     if (!group.current) return
@@ -131,8 +141,8 @@ function Loading() {
   return <Html center><div className="loading-model"><span className="loading-dot" /> LOADING YOUR CANVAS</div></Html>
 }
 
-export default function Experience({ progress, designIndex, customColors, selectedPart, onParts, onSelectPart, onReady, interactive = false }: {
-  progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null;
+export default function Experience({ progress, designIndex, customColors, selectedPart, finish, onParts, onSelectPart, onReady, interactive = false }: {
+  progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null; finish: string;
   onParts: (parts: PartInfo[]) => void; onSelectPart: (name: string) => void; onReady: (ready: boolean) => void; interactive?: boolean
 }) {
   const { scene } = useGLTF('https://raw.githubusercontent.com/teddyjeremy/af1-interactive/main/models/nike%20shoes.glb')
@@ -157,7 +167,7 @@ export default function Experience({ progress, designIndex, customColors, select
     <pointLight position={[3, -1, 2]} intensity={1.8} color={designs[designIndex].accent} />
     <Suspense fallback={<Loading />}>
       <Float speed={1.1} rotationIntensity={interactive ? 0 : 0.025} floatIntensity={interactive ? 0 : 0.05}>
-        <Shoe progress={progress} designIndex={designIndex} customColors={customColors} selectedPart={selectedPart} onParts={onParts} onSelectPart={onSelectPart} onReady={onReady} interactive={interactive} />
+        <Shoe progress={progress} designIndex={designIndex} customColors={customColors} selectedPart={selectedPart} finish={finish} onParts={onParts} onSelectPart={onSelectPart} onReady={onReady} interactive={interactive} />
       </Float>
       <Environment preset="studio" />
       <ContactShadows position={[0, -1.05, 0]} opacity={0.3} scale={5} blur={2.2} far={3.5} />
