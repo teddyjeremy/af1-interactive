@@ -166,9 +166,9 @@ export function Shoe({
     let sequenceExplosion: number | null = null;
     if (sequenceStart.current !== null) {
       const t = elapsed - sequenceStart.current;
-      const explodeEnd = 1.25;
-      const rotateEnd = 4.85;
-      const assembleEnd = 6.4;
+      const explodeEnd = chamber.reduced ? 0.4 : 1.25;
+      const rotateEnd = chamber.reduced ? explodeEnd : 4.85;
+      const assembleEnd = chamber.reduced ? 0.9 : 6.4;
       if (t < explodeEnd) {
         sequenceExplosion = THREE.MathUtils.smoothstep(t / explodeEnd, 0, 1);
         group.rotation.y = 0;
