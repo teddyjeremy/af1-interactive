@@ -26,6 +26,10 @@ type ChamberState = {
   isolated: PartId | null;
   prints: boolean;
   knife: number;
+  explosion: number;
+  wireframe: boolean;
+  hiddenParts: PartId[];
+  lighting: number;
   camera: CameraPreset;
   cameraNonce: number;
   loaded: boolean;
@@ -49,6 +53,11 @@ type ChamberState = {
   replaceDesign: (design: Design, edited?: boolean) => void;
   setPrints: (prints: boolean) => void;
   setKnife: (knife: number) => void;
+  setExplosion: (explosion: number) => void;
+  setWireframe: (wireframe: boolean) => void;
+  togglePartsVisibility: (ids: PartId[]) => void;
+  showAllParts: () => void;
+  setLighting: (lighting: number) => void;
   setCamera: (camera: CameraPreset) => void;
   nudgeCamera: () => void;
   setLoad: (progress: number, loaded: boolean) => void;
@@ -82,6 +91,10 @@ export const useChamber = create<ChamberState>((set, get) => ({
   isolated: null,
   prints: false,
   knife: 0,
+  explosion: 0,
+  wireframe: false,
+  hiddenParts: [],
+  lighting: 1,
   camera: "three",
   cameraNonce: 0,
   loaded: false,
@@ -172,6 +185,10 @@ export const useChamber = create<ChamberState>((set, get) => ({
       isolated: null,
       prints: false,
       knife: 0,
+      explosion: 0,
+      wireframe: false,
+      hiddenParts: [],
+      lighting: 1,
       notice: null,
     });
   },
@@ -186,6 +203,20 @@ export const useChamber = create<ChamberState>((set, get) => ({
   },
   setPrints: (prints) => set({ prints }),
   setKnife: (knife) => set({ knife: Math.min(1, Math.max(0, knife)) }),
+  setExplosion: (explosion) => set({ explosion: Math.min(1, Math.max(0, explosion)) }),
+  setWireframe: (wireframe) => set({ wireframe }),
+  togglePartsVisibility: (ids) => {
+    if (!ids.length) return;
+    const hidden = new Set(get().hiddenParts);
+    const shouldShow = ids.every((id) => hidden.has(id));
+    for (const id of ids) {
+      if (shouldShow) hidden.delete(id);
+      else hidden.add(id);
+    }
+    set({ hiddenParts: [...hidden] });
+  },
+  showAllParts: () => set({ hiddenParts: [], isolated: null }),
+  setLighting: (lighting) => set({ lighting: Math.min(1.5, Math.max(0.4, lighting)) }),
   setCamera: (camera) => set({ camera, cameraNonce: get().cameraNonce + 1 }),
   nudgeCamera: () => set({ cameraNonce: get().cameraNonce + 1 }),
   setLoad: (loadProgress, loaded) => set({ loadProgress, loaded }),
