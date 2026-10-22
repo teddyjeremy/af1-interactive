@@ -207,7 +207,7 @@ export default function App() {
         <div className="studio-viewport" ref={studioViewportRef}>
           <div className="studio-viewport-top"><span>PREVIEW / {designs[designIndex].name}</span><span>DRAG TO ORBIT <MousePointer2 size={13}/></span></div>
           <div className="camera-controls" aria-label="Camera views">{[{id:'side',label:'SIDE'},{id:'three-quarter',label:'3/4'},{id:'front',label:'FRONT'},{id:'rear',label:'REAR'},{id:'top',label:'TOP'}].map(preset=><button key={preset.id} className={cameraPreset===preset.id?'camera-preset camera-preset-active':'camera-preset'} onClick={()=>{setCameraPreset(preset.id);setCameraResetToken(token=>token+1)}}>{preset.label}</button>)}<button className="camera-preset camera-fullscreen" onClick={()=>void toggleFullscreen()} aria-label={isFullscreen?'Exit fullscreen':'Enter fullscreen'}>{isFullscreen?<Minimize2 size={13}/>:<Maximize2 size={13}/>}</button></div>
-          <div className="studio-model"><Experience progress={progress} designIndex={designIndex} customColors={customColors} selectedPart={selectedPart} finish={finish} onParts={setParts} onSelectPart={setSelectedPart} onReady={setModelReady} interactive/></div>
+          <div className="studio-model"><Experience progress={progress} designIndex={designIndex} customColors={customColors} selectedPart={selectedPart} finish={finish} cameraPreset={cameraPreset} cameraResetToken={cameraResetToken} onParts={setParts} onSelectPart={setSelectedPart} onReady={setModelReady} interactive/></div>
           <div className="studio-viewport-bottom"><span>{selectedPart ? selectedPart : 'SELECT A PART IN THE LIST'}</span><span>{visibleParts.length} MESHES DETECTED</span></div>
         </div>
         <aside className="editor-panel">
