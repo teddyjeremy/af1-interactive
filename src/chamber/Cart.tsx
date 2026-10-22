@@ -37,11 +37,11 @@ export function Cart() {
   function submit() {
     const buyer = name.trim();
     if (buyer.length < 2) {
-      setError("Enter your name to save this design.");
+      setError("Add your name to save this design");
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setError("Enter a valid email address.");
+      setError("Enter a valid email address");
       return;
     }
     setError(null);
@@ -71,7 +71,7 @@ export function Cart() {
             Design saved for {order.buyer}. {order.count} {order.count === 1 ? "pair" : "pairs"}, {money(order.total)}.
           </p>
           <p className="mt-3 text-sm leading-relaxed text-steel">
-            No payment was taken. This is a concept storefront; your order is saved only in this session.
+            No payment is taken in this concept store; the design is saved for this session
           </p>
           {note.trim() && <p className="mt-3 font-mono text-xs text-bone">“{note.trim()}”</p>}
           <button
@@ -130,7 +130,7 @@ export function Cart() {
         </form>
       ) : cart.length === 0 ? (
         <p className="text-sm leading-relaxed text-steel">
-          Your bag is waiting. Choose a colourway, make it yours, then add your pair.
+          Your bag is empty — choose a colourway and add your pair
         </p>
       ) : (
         <div className="flex flex-col gap-3">
@@ -186,7 +186,7 @@ export function Cart() {
             Review order
           </button>
           <p className="font-mono text-xs leading-relaxed text-steel">
-            Concept checkout only — no payment is collected.
+            Concept checkout only — no payment collected
           </p>
         </div>
       )}
