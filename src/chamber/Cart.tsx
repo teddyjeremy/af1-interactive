@@ -68,7 +68,7 @@ export function Cart() {
         <div>
           <p className="font-mono text-sm text-heat">{order.code}</p>
           <p className="mt-3 text-sm leading-relaxed text-bone">
-            Logged for {order.buyer}. {order.count} {order.count === 1 ? "pair" : "pairs"}, {money(order.total)}.
+            Design saved for {order.buyer}. {order.count} {order.count === 1 ? "pair" : "pairs"}, {money(order.total)}.
           </p>
           <p className="mt-3 text-sm leading-relaxed text-steel">
             No payment was taken. This is a concept storefront; your order is saved only in this session.
