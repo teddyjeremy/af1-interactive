@@ -1,6 +1,7 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { useProgress } from "@react-three/drei";
-import { Camera, Download, Link2, Maximize2, Redo2, RotateCcw, Undo2, Upload } from "lucide-react";
+import { Camera, ChevronDown, Download, Link2, Maximize2, Redo2, RotateCcw, Undo2, Upload } from "lucide-react";
+import { Cart } from "./Cart";
 import { Scene } from "./Scene";
 import { takeShot } from "./shot";
 import { decodeShare, designToJson, encodeShare, parseDesign } from "./codec";
@@ -8,15 +9,16 @@ import {
   FINISHES,
   GROUPS,
   LABELS,
+  PARTS,
   SWATCHES,
   TREATMENTS,
   type Finish,
-  type PartId,
   type PartStyle,
   type Treatment,
 } from "./parts";
+import { money, pairPrice, partPrice, selectionPrice, sizeAdd, SIZES } from "./pricing";
 import { PRESETS } from "./presets";
-import { useChamber, type CameraPreset } from "./store";
+import { useChamber, writeStudy, type CameraPreset } from "./store";
 
 const CHAPTERS = [
   {
@@ -54,6 +56,12 @@ const CAMERAS: { id: CameraPreset; label: string }[] = [
   { id: "sole", label: "Sole" },
   { id: "top", label: "Top" },
 ];
+
+function drift(value: number) {
+  if (value === 0) return "";
+  const body = money(Math.abs(value));
+  return value > 0 ? `+${body}` : `−${body}`;
+}
 
 function chapterIndex(progress: number) {
   const breaks = [0, 0.2, 0.42, 0.64, 0.82];
@@ -120,6 +128,10 @@ export function Chamber() {
   const future = useChamber((s) => s.future.length);
   const notice = useChamber((s) => s.notice);
   const reduced = useChamber((s) => s.reduced);
+  const edited = useChamber((s) => s.edited);
+  const size = useChamber((s) => s.size);
+  const cartCount = useChamber((s) => s.cart.reduce((sum, line) => sum + line.qty, 0));
+  const cartOpen = useChamber((s) => s.cartOpen);
   const { progress, active } = useProgress();
   const opening = mounted && webgl && (active || progress < 100);
 
@@ -128,8 +140,11 @@ export function Chamber() {
     setWebgl(hasWebGL());
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const narrow = window.matchMedia("(max-width: 760px)");
+    const short = window.matchMedia("(max-height: 780px)");
     useChamber.getState().setReduced(motion.matches);
-    setSheet(!narrow.matches);
+    useChamber.getState().hydrateCart();
+    useChamber.getState().hydrateStudy();
+    setSheet(!narrow.matches && !short.matches);
     const onMotion = () => useChamber.getState().setReduced(motion.matches);
     const onHide = () => setHidden(document.hidden);
     motion.addEventListener("change", onMotion);
@@ -143,7 +158,18 @@ export function Chamber() {
         useChamber.getState().setNotice("That shared design could not be read.");
       }
     }
+    const unsub = useChamber.subscribe((state, prev) => {
+      if (
+        state.design !== prev.design ||
+        state.prints !== prev.prints ||
+        state.size !== prev.size ||
+        state.edited !== prev.edited
+      ) {
+        writeStudy(state);
+      }
+    });
     return () => {
+      unsub();
       motion.removeEventListener("change", onMotion);
       document.removeEventListener("visibilitychange", onHide);
     };
@@ -157,19 +183,77 @@ export function Chamber() {
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      const tag = (event.target as HTMLElement | null)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
       const store = useChamber.getState();
+      const onSlider = target?.getAttribute("role") === "slider";
       if (event.key === "b") store.setMode("bench", progressRef.current);
       if (event.key === "p") store.setMode("pass");
+      if (event.key === "m" && store.mode === "bench") setSheet((open) => !open);
+      if (event.key === "c") {
+        const next = !store.cartOpen;
+        store.setCartOpen(next);
+        if (next) setSheet(false);
+      }
+      if (event.key === "Escape") {
+        if (store.cartOpen) store.setCartOpen(false);
+        else setSheet(false);
+      }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
         event.preventDefault();
         if (event.shiftKey) store.redo();
         else store.undo();
       }
-      if (store.mode === "bench" && event.key >= "1" && event.key <= "6") {
+      if (store.mode === "bench" && !onSlider && event.key >= "1" && event.key <= "6") {
         store.setCamera(CAMERAS[Number(event.key) - 1].id);
       }
+      if (onSlider && (event.key === "ArrowUp" || event.key === "ArrowDown" || event.key === "Home" || event.key === "End")) {
+        return;
+      }
+      if (event.key === " " && tag === "BUTTON") return;
+      const paging =
+        event.key === "PageDown" ||
+        event.key === "PageUp" ||
+        event.key === "Home" ||
+        event.key === "End" ||
+        event.key === " ";
+      const nudging = store.mode === "pass" && (event.key === "ArrowDown" || event.key === "ArrowUp");
+      if (!paging && !nudging) return;
+      event.preventDefault();
+      const key = event.key;
+      const fromBench = store.mode !== "pass";
+      if (fromBench) store.setMode("pass");
+      const apply = (resume: boolean) => {
+        const node = scroller.current;
+        if (!node) return;
+        const page = Math.max(160, Math.round(node.clientHeight * 0.82));
+        const step = Math.max(72, Math.round(node.clientHeight * 0.28));
+        const max = Math.max(0, node.scrollHeight - node.clientHeight);
+        let top = resume ? progressRef.current * max : node.scrollTop;
+        if (key === "Home") top = 0;
+        else if (key === "End") top = max;
+        else if (key === "PageUp") top -= page;
+        else if (key === "ArrowUp") top -= step;
+        else if (key === "ArrowDown") top += step;
+        else if (key === "PageDown" || key === " ") top += page;
+        node.scrollTop = Math.min(max, Math.max(0, top));
+      };
+      if (!fromBench) {
+        apply(false);
+        return;
+      }
+      let frames = 0;
+      const waitForPass = () => {
+        frames += 1;
+        const node = scroller.current;
+        if (node && node.scrollHeight > node.clientHeight + 8) {
+          apply(true);
+          return;
+        }
+        if (frames < 40) requestAnimationFrame(waitForPass);
+      };
+      requestAnimationFrame(waitForPass);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -244,6 +328,26 @@ export function Chamber() {
     });
   }
 
+  function toggleSheet() {
+    setSheet((open) => {
+      const next = !open;
+      if (next) useChamber.getState().setCartOpen(false);
+      return next;
+    });
+  }
+
+  function openCart() {
+    const store = useChamber.getState();
+    const next = !store.cartOpen;
+    store.setCartOpen(next);
+    if (next) setSheet(false);
+  }
+
+  function addPair() {
+    setSheet(false);
+    useChamber.getState().addToCart();
+  }
+
   async function fullscreen() {
     const node = scroller.current;
     if (!node) return;
@@ -259,6 +363,10 @@ export function Chamber() {
       : selected.length > 1
         ? `${selected.length} panels`
         : "Panel";
+  const selPrice = selectionPrice(design, selected);
+  const total = pairPrice(design, prints, size);
+  const base = pairPrice(PRESETS[0], false, 9);
+  const delta = total - base;
   const chapterCopy = CHAPTERS[chapter];
 
   return (
@@ -286,7 +394,7 @@ export function Chamber() {
         )}
         <div className="vignette" />
 
-        <header className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-4 px-4 py-4 md:px-8 md:py-6">
+        <header className="absolute inset-x-0 top-0 z-20 flex flex-wrap items-start justify-between gap-3 px-4 py-4 md:px-8 md:py-6">
           <div>
             <p className="font-display text-2xl leading-none tracking-tight text-bone md:text-3xl">CHAMBER</p>
             <p className="mt-1 font-mono text-xs tracking-widest text-steel uppercase">A last, held in light</p>
@@ -307,6 +415,23 @@ export function Chamber() {
               aria-pressed={mode === "bench"}
             >
               Bench
+            </button>
+            <button
+              type="button"
+              className="mode-btn"
+              onClick={openCart}
+              aria-label={`Current pair ${money(total)}. Open the cart.`}
+            >
+              {money(total)}
+              {delta !== 0 ? ` ${drift(delta)}` : ""}
+            </button>
+            <button
+              type="button"
+              className={cartOpen ? "mode-btn mode-btn-on" : "mode-btn"}
+              onClick={openCart}
+              aria-pressed={cartOpen}
+            >
+              Cart{cartCount ? ` ${cartCount}` : ""}
             </button>
           </div>
         </header>
@@ -334,7 +459,14 @@ export function Chamber() {
                 {chapterCopy.body}
               </p>
               {chapter === 0 && (
-                <p className="mt-6 font-mono text-xs tracking-widest text-steel uppercase">Scroll the chamber</p>
+                <p className="mt-6 font-mono text-xs tracking-widest text-steel uppercase">
+                  Scroll, or Page Down
+                </p>
+              )}
+              {edited && (
+                <p className="mt-4 max-w-xs font-mono text-xs leading-relaxed text-heat">
+                  Colour kept from the bench · {design.name} · {money(total)}
+                </p>
               )}
               {chapter === CHAPTERS.length - 1 && (
                 <button
@@ -360,38 +492,73 @@ export function Chamber() {
           </p>
         )}
 
-        {mode === "bench" && (
+        <Cart />
+
+        {mode === "bench" && !sheet && (
+          <div className="rail">
+            <button type="button" className="chip chip-on" aria-expanded={false} onClick={toggleSheet}>
+              Edit
+            </button>
+            <p className="min-w-0 font-mono text-xs text-bone">
+              <span className="text-heat">{money(selPrice)}</span>
+              <span className="text-steel"> {partLabel}</span>
+              <span> · {money(total)}</span>
+              {delta !== 0 && <span className="text-heat"> {drift(delta)}</span>}
+            </p>
+            <button type="button" className="chip" onClick={addPair}>
+              Add · US {size}
+            </button>
+            {notice && (
+              <p className="basis-full font-mono text-xs text-heat" role="status">
+                {notice}
+              </p>
+            )}
+          </div>
+        )}
+
+        {mode === "bench" && sheet && (
           <div className="absolute inset-x-0 bottom-0 z-20 px-3 pb-3 md:px-6 md:pb-5">
             <div className="dock">
-              <div className="flex items-center gap-2 overflow-x-auto">
-                {PRESETS.map((preset, index) => (
-                  <button
-                    key={preset.name}
-                    type="button"
-                    className={design.name === preset.name ? "chip chip-on" : "chip"}
-                    onClick={() => useChamber.getState().applyPreset(index)}
-                  >
-                    <span
-                      className="swatch"
-                      style={{ background: preset.parts.AF1_Quarter.color }}
-                    />
-                    <span
-                      className="swatch swatch-edge"
-                      style={{ background: preset.parts.AF1_Swoosh.color }}
-                    />
-                    {preset.name}
-                  </button>
-                ))}
-                <button type="button" className="chip md:hidden" onClick={() => setSheet((open) => !open)}>
-                  {sheet ? "Hide" : "Edit"}
+              <div className="dock-head">
+                <div className="min-w-36 flex-1">
+                  <p className="truncate font-mono text-sm text-bone">{design.name}</p>
+                  <p className="truncate font-mono text-xs text-steel">
+                    <span className="text-bone">{partLabel}</span>{" "}
+                    <span className="text-heat">{money(selPrice)}</span>
+                    <span> · Pair {money(total)}</span>
+                    {delta !== 0 && <span className="text-heat"> {drift(delta)}</span>}
+                  </p>
+                </div>
+                <button type="button" className="chip" aria-expanded onClick={toggleSheet}>
+                  <ChevronDown />
+                  Minimize
+                </button>
+                <button type="button" className="chip chip-on" onClick={addPair}>
+                  Add · US {size}
                 </button>
               </div>
 
-              {sheet && style && (
-                <div className="mt-3 flex flex-col gap-3">
+              {style && (
+                <div className="dock-body">
+                  <div className="flex items-center gap-2 overflow-x-auto">
+                    {PRESETS.map((preset, index) => (
+                      <button
+                        key={preset.name}
+                        type="button"
+                        className={design.name === preset.name ? "chip chip-on" : "chip"}
+                        onClick={() => useChamber.getState().applyPreset(index)}
+                      >
+                        <span className="swatch" style={{ background: preset.parts.AF1_Quarter.color }} />
+                        <span className="swatch swatch-edge" style={{ background: preset.parts.AF1_Swoosh.color }} />
+                        {preset.name}
+                      </button>
+                    ))}
+                  </div>
                   <div className="flex gap-2 overflow-x-auto">
                     {GROUPS.map((group) => {
-                      const on = group.parts.every((id) => selected.includes(id)) && selected.length === group.parts.length;
+                      const on =
+                        group.parts.every((id) => selected.includes(id)) && selected.length === group.parts.length;
+                      const groupPrice = selectionPrice(design, group.parts);
                       return (
                         <button
                           key={group.id}
@@ -400,6 +567,23 @@ export function Chamber() {
                           onClick={() => useChamber.getState().select(group.parts)}
                         >
                           {group.label}
+                          <span className="text-steel">{money(groupPrice)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto">
+                    {PARTS.map((id) => {
+                      const on = selected.length === 1 && selected[0] === id;
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          className={on ? "chip chip-on" : "chip"}
+                          onClick={() => useChamber.getState().select([id])}
+                        >
+                          {LABELS[id]}
+                          <span className="text-heat">{money(partPrice(design.parts[id], id))}</span>
                         </button>
                       );
                     })}
@@ -407,6 +591,7 @@ export function Chamber() {
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="min-w-28 font-mono text-sm text-bone">
                       {partLabel}
+                      <span className="text-heat"> {money(selPrice)}</span>
                       {isolated ? " · isolated" : ""}
                     </p>
                     {SWATCHES.map((swatch) => (
@@ -469,6 +654,21 @@ export function Chamber() {
                       </button>
                     )}
                   </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-mono text-xs tracking-widest text-steel uppercase">Size</p>
+                    {SIZES.map((item) => (
+                      <button
+                        key={item}
+                        type="button"
+                        className={size === item ? "chip chip-on" : "chip"}
+                        onClick={() => useChamber.getState().setSize(item)}
+                        aria-pressed={size === item}
+                      >
+                        {item}
+                        {sizeAdd(item) > 0 ? ` +${sizeAdd(item)}` : ""}
+                      </button>
+                    ))}
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {CAMERAS.map((item) => (
                       <button
@@ -509,12 +709,13 @@ export function Chamber() {
                     </IconButton>
                   </div>
                   <p className="font-mono text-xs text-steel">
-                    Click a panel. Double-click to isolate it. Draw the knife to open the last.
+                    Each panel has its own price. Minimize hides this bench. Page Up and Page Down still move the pass.
+                    M hides the panel. Colour stays when you go back to Pass.
                   </p>
                 </div>
               )}
               {notice && (
-                <p className="mt-2 font-mono text-xs text-heat" role="status">
+                <p className="dock-note font-mono text-xs text-heat" role="status">
                   {notice}
                 </p>
               )}

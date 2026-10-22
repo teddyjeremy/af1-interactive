@@ -6,8 +6,11 @@ CHAMBER is an optical study of one sneaker, not a storefront. The shoe stays lar
 
 ## Experience
 
-- **Pass.** Scroll progress drives the camera, the lights, and the material state in both directions. Five chapters: the shoe held in a beam, the sole, the swoosh isolated, pigment flooding the leather, then the bench.
-- **Bench.** Click a panel or a group. Set colour, finish (leather, suede, patent, metal, rubber, pearl), and a world-space surface treatment (grain, halftone, contour). Eight presets change the shoe itself: University, Court, Carbon, Vermilion, Night garden, Patent ink, Halftone, Pearl shell.
+- **Pass.** Scroll, Page Up, Page Down, Home, End, or the arrow keys. The page itself does not scroll — those keys move the chamber. Five chapters: the shoe held in a beam, the sole, the swoosh isolated, pigment flooding the leather, then the bench.
+- **Bench.** Click a panel, a priced part, or a group. Set colour, finish (leather, suede, patent, metal, rubber, pearl), and a world-space surface treatment (grain, halftone, contour). Eight presets change the shoe itself: University, Court, Carbon, Vermilion, Night garden, Patent ink, Halftone, Pearl shell. The pair price moves with the panel, the finish, the treatment, prints, and the size.
+- **Minimize.** Minimize (or M) collapses the bench to a small rail so the shoe is clear. Edit opens it again.
+- **Colour stays.** Leaving the bench for the pass keeps the colour you set. The room still moves. Reset returns the cinematic pass. The study is remembered in this browser.
+- **Study cart.** Add the current pair. The cart total follows each line. Checkout only logs a study note in this session — nothing is charged. This is a portfolio.
 - **The knife.** A vertical cut tied to the camera. Drag it and the shell opens onto the last — the wooden form inside the shoe. The inner form is not drawn until the knife moves.
 - **Isolate.** Double-click a panel to drop everything else into shadow.
 - **Prints.** Restores the model’s original colour maps on laces, tongue, collar, insole, and stitch.

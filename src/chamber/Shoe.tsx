@@ -163,10 +163,8 @@ function paint(
   pulse: React.MutableRefObject<number>,
 ) {
   const chamber = useChamber.getState();
-  const sample =
-    chamber.mode === "bench"
-      ? { from: chamber.design, to: chamber.design, t: 0 }
-      : passPair(progress);
+  const hold = chamber.mode === "bench" || chamber.edited;
+  const sample = hold ? { from: chamber.design, to: chamber.design, t: 0 } : passPair(progress);
   const selected = new Set(chamber.selected);
   const selKey = chamber.selected.join("|");
   if (prevSel.current !== selKey) {
