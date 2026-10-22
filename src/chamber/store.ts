@@ -27,6 +27,7 @@ type ChamberState = {
   prints: boolean;
   knife: number;
   explosion: number;
+  sequenceNonce: number;
   wireframe: boolean;
   hiddenParts: PartId[];
   lighting: number;
@@ -57,6 +58,7 @@ type ChamberState = {
   setPrints: (prints: boolean) => void;
   setKnife: (knife: number) => void;
   setExplosion: (explosion: number) => void;
+  playBuildSequence: () => void;
   setWireframe: (wireframe: boolean) => void;
   togglePartsVisibility: (ids: PartId[]) => void;
   showAllParts: () => void;
@@ -98,6 +100,7 @@ export const useChamber = create<ChamberState>((set, get) => ({
   prints: false,
   knife: 0,
   explosion: 0,
+  sequenceNonce: 0,
   wireframe: false,
   hiddenParts: [],
   lighting: 1,
@@ -216,6 +219,7 @@ export const useChamber = create<ChamberState>((set, get) => ({
   setPrints: (prints) => set({ prints }),
   setKnife: (knife) => set({ knife: Math.min(1, Math.max(0, knife)) }),
   setExplosion: (explosion) => set({ explosion: Math.min(1, Math.max(0, explosion)) }),
+  playBuildSequence: () => set((state) => ({ sequenceNonce: state.sequenceNonce + 1, explosion: 0, turntable: false })),
   setWireframe: (wireframe) => set({ wireframe }),
   togglePartsVisibility: (ids) => {
     if (!ids.length) return;
