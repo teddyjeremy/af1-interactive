@@ -157,7 +157,7 @@ export function Shoe({
     const settle = 1 - THREE.MathUtils.smoothstep(scroll, 0.50, 0.59);
     const cinematicExplosion = rise * settle * 0.96;
     const explosion = chamber.mode === "bench" ? chamber.explosion : cinematicExplosion;
-    const orbit = THREE.MathUtils.smoothstep(scroll, 0.31, 0.50) * Math.PI * 2;
+    const orbit = scroll >= 0.50 ? 0 : THREE.MathUtils.smoothstep(scroll, 0.31, 0.50) * Math.PI * 2;
     group.rotation.y =
       chamber.mode === "pass" && !chamber.reduced
         ? orbit
