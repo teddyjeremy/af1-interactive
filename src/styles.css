@@ -682,3 +682,53 @@ button:not(:disabled):hover {
   .instrument { border-radius: 1rem; }
   .dock-head { padding: 0.65rem; }
 }
+
+
+/* Editorial motion direction: calm, intentional, product-first. */
+.progress-bar {
+  background: var(--color-heat);
+  box-shadow: none;
+}
+.vignette::after {
+  display: none;
+}
+.story-copy {
+  animation: none;
+}
+.story-counter span {
+  animation: none;
+}
+.end-action {
+  animation: none;
+  box-shadow: none;
+}
+.story-step,
+.mode-btn,
+.chip,
+.icon-btn {
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+.chip:not(.chip-on):hover,
+.mode-btn:not(.mode-btn-on):hover,
+.icon-btn:hover {
+  transform: none;
+  box-shadow: none;
+}
+.chip:active,
+.mode-btn:active,
+.icon-btn:active {
+  transform: none;
+}
+.story-step {
+  transition: background-color 140ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
