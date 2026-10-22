@@ -87,13 +87,6 @@ export function Chamber() {
   const design = useChamber((s) => s.design);
   const selected = useChamber((s) => s.selected);
   const isolated = useChamber((s) => s.isolated);
-  const explosion = useChamber((s) => s.explosion);
-  const wireframe = useChamber((s) => s.wireframe);
-  const hiddenParts = useChamber((s) => s.hiddenParts);
-  const lighting = useChamber((s) => s.lighting);
-  const turntable = useChamber((s) => s.turntable);
-  const inspection = useChamber((s) => s.inspection);
-  const compareOriginal = useChamber((s) => s.compareOriginal);
   const prints = useChamber((s) => s.prints);
   const knife = useChamber((s) => s.knife);
   const camera = useChamber((s) => s.camera);
@@ -407,7 +400,7 @@ export function Chamber() {
               <p className="story-description">{[
                 "The Air Force 1. A timeless silhouette, ready for a new point of view. Start with the details.",
                 "Premium textures, considered details, and a profile that never needs an introduction.",
-                "Every layer lifts into the light, takes a full turn, then locks back into its unmistakable shape.",
+                "A closer look at the layers, materials and silhouette that make the AF1 unmistakable.",
                 "Go tonal, go bold, or build a colour story that is entirely yours.",
                 "Choose your colourway, finish, texture and size. Your pair, your call.",
               ][storyStage]}</p>
@@ -483,40 +476,17 @@ export function Chamber() {
                 <div className="inst-scroll">
                   <div className="inst-group">
                     <div className="price-row">
-                      <p className="inst-label">Inside the icon</p>
-                      <span className="text-xs text-steel">6 sec · 360°</span>
+                      <p className="inst-label">A closer look</p>
+                      <span className="text-xs text-steel">A short reveal</span>
                     </div>
                     <p className="max-w-lg text-xs leading-relaxed text-steel">
-                      Pull the AF1 apart. Watch every component turn in the light, then settle back into place.
+                      See the layers lift apart, turn gently, and settle back into the original silhouette.
                     </p>
-                    <div className="flex flex-wrap gap-2">
+                    <div>
                       <button type="button" className="chip chip-on" onClick={() => useChamber.getState().playBuildSequence()}>
-                        <RotateCcw /> Watch the build
-                      </button>
-                      <button type="button" className={wireframe ? "chip chip-on" : "chip"} aria-pressed={wireframe} onClick={() => useChamber.getState().setWireframe(!wireframe)}>
-                        Technical sketch
-                      </button>
-                      <button type="button" className={turntable ? "chip chip-on" : "chip"} aria-pressed={turntable} onClick={() => useChamber.getState().setTurntable(!turntable)}>
-                        360° spin
-                      </button>
-                      <button type="button" className={inspection ? "chip chip-on" : "chip"} aria-pressed={inspection} onClick={() => useChamber.getState().setInspection(!inspection)}>
-                        Light sweep
-                      </button>
-                      <button type="button" className={compareOriginal ? "chip chip-on" : "chip"} aria-pressed={compareOriginal} onClick={() => useChamber.getState().setCompareOriginal(!compareOriginal)}>
-                        {compareOriginal ? "Your colourway" : "Original white"}
-                      </button>
-                      <button type="button" className="chip" onClick={() => hiddenParts.length && selected.every((id) => hiddenParts.includes(id)) ? useChamber.getState().showAllParts() : useChamber.getState().togglePartsVisibility(selected)}>
-                        {hiddenParts.length && selected.every((id) => hiddenParts.includes(id)) ? "Show all pieces" : "Hide selected"}
+                        <RotateCcw /> Reveal the details
                       </button>
                     </div>
-                    <label className="flex flex-col gap-2 text-xs text-steel">
-                      <span className="flex justify-between"><span>Exploded view</span><span>{Math.round(explosion * 100)}%</span></span>
-                      <input className="w-full accent-[var(--color-heat)]" type="range" min="0" max="100" value={Math.round(explosion * 100)} aria-label="Exploded view" onChange={(event) => useChamber.getState().setExplosion(Number(event.target.value) / 100)} />
-                    </label>
-                    <label className="flex flex-col gap-2 text-xs text-steel">
-                      <span className="flex justify-between"><span>Studio light</span><span>{Math.round(lighting * 100)}%</span></span>
-                      <input className="w-full accent-[var(--color-heat)]" type="range" min="40" max="150" value={Math.round(lighting * 100)} aria-label="Studio light" onChange={(event) => useChamber.getState().setLighting(Number(event.target.value) / 100)} />
-                    </label>
                   </div>
                   <div className="inst-group">
                     <p className="inst-label">Colourway</p>

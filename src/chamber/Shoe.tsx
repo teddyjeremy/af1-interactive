@@ -159,39 +159,31 @@ export function Shoe({
     }
     if (chamber.mode !== "bench") sequenceStart.current = null;
 
-    const scroll = progressRef.current ?? 0;
-    // The campaign still runs its scroll-led orbit. In Customize, the signature
-    // sequence takes over: explode, rotate while separated, then reassemble.
-    const rise = THREE.MathUtils.smoothstep(scroll, 0.18, 0.32);
-    const settle = 1 - THREE.MathUtils.smoothstep(scroll, 0.50, 0.59);
-    const cinematicExplosion = rise * settle * 0.96;
+    // Keep the shoe composed during browsing. The optional reveal below is the only exploded motion.
+    const cinematicExplosion = 0;
     let sequenceExplosion: number | null = null;
     if (sequenceStart.current !== null) {
       const t = elapsed - sequenceStart.current;
-      const explodeEnd = chamber.reduced ? 0.4 : 1.25;
-      const rotateEnd = chamber.reduced ? explodeEnd : 4.85;
-      const assembleEnd = chamber.reduced ? 0.9 : 6.4;
+      const explodeEnd = chamber.reduced ? 0.22 : 0.72;
+      const rotateEnd = chamber.reduced ? explodeEnd : 1.38;
+      const assembleEnd = chamber.reduced ? 0.42 : 2.28;
       if (t < explodeEnd) {
         sequenceExplosion = THREE.MathUtils.smoothstep(t / explodeEnd, 0, 1);
-        group.rotation.y = 0;
+        group.rotation.y = 0.04;
       } else if (t < rotateEnd) {
         sequenceExplosion = 1;
-        const spin = THREE.MathUtils.smoothstep((t - explodeEnd) / (rotateEnd - explodeEnd), 0, 1);
-        group.rotation.y = spin * Math.PI * 2;
+        const turn = THREE.MathUtils.smoothstep((t - explodeEnd) / (rotateEnd - explodeEnd), 0, 1);
+        group.rotation.y = THREE.MathUtils.lerp(0.04, 0.42, turn);
       } else if (t < assembleEnd) {
         sequenceExplosion = 1 - THREE.MathUtils.smoothstep((t - rotateEnd) / (assembleEnd - rotateEnd), 0, 1);
-        group.rotation.y = Math.PI * 2;
+        group.rotation.y = 0.42;
       } else {
         sequenceStart.current = null;
         sequenceExplosion = 0;
         group.rotation.y = 0;
       }
     } else {
-      const orbit = scroll >= 0.50 ? 0 : THREE.MathUtils.smoothstep(scroll, 0.31, 0.50) * Math.PI * 2;
-      group.rotation.y =
-        chamber.mode === "pass" && !chamber.reduced
-          ? orbit
-          : THREE.MathUtils.damp(group.rotation.y, 0, 5, d);
+      group.rotation.y = THREE.MathUtils.damp(group.rotation.y, 0, 4.5, d);
     }
     const explosion = sequenceExplosion ?? (chamber.mode === "bench" ? chamber.explosion : cinematicExplosion);
     const hiddenParts = new Set(chamber.mode === "bench" ? chamber.hiddenParts : []);
