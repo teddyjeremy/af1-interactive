@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { isPartId, LAST_HIDDEN, PARTS, type PartId } from "./parts";
-import { passPair, PRESETS } from "./presets";
+import { ORIGINAL, passPair } from "./presets";
 import { mixFinish, MODEL_URL, toPhysical, treatmentId, woodMaterial } from "./materials";
 import { useChamber } from "./store";
 
@@ -213,8 +213,8 @@ function paint(
   const sample =
     chamber.mode === "bench"
       ? {
-          from: chamber.compareOriginal ? PRESETS[0] : chamber.design,
-          to: chamber.compareOriginal ? PRESETS[0] : chamber.design,
+          from: chamber.compareOriginal ? ORIGINAL : chamber.design,
+          to: chamber.compareOriginal ? ORIGINAL : chamber.design,
           t: 0,
         }
       : passPair(progress);
