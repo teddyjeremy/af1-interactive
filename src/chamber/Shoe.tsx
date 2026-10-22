@@ -2,7 +2,7 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
-import { isPartId, LAST_HIDDEN, type PartId } from "./parts";
+import { isPartId, LAST_HIDDEN, PARTS, type PartId } from "./parts";
 import { passPair, PRESETS } from "./presets";
 import { mixFinish, MODEL_URL, toPhysical, treatmentId, woodMaterial } from "./materials";
 import { useChamber } from "./store";
@@ -78,6 +78,12 @@ function prepare(source: THREE.Object3D, shellPlane: THREE.Plane, lastPlane: THR
     }
   });
 
+  const foundParts = new Set(panels.map((panel) => panel.name));
+  const missingParts = PARTS.filter((name) => !foundParts.has(name));
+  if (missingParts.length) {
+    console.warn("[CHAMBER] GLB panels missing from the named-mesh hierarchy:", missingParts);
+  }
+
   const last = shell.clone(true);
   const wood = woodMaterial(lastPlane);
   last.traverse((obj) => {
@@ -146,7 +152,6 @@ export function Shoe({
     prepared.last.visible = knife > 0.015;
     const explosion = chamber.mode === "bench" ? chamber.explosion : 0;
     const hiddenParts = new Set(chamber.mode === "bench" ? chamber.hiddenParts : []);
-    const positionDamp = 1 - Math.exp(-8 * d);
     for (const panel of prepared.panels) {
       panel.object.position.x = THREE.MathUtils.damp(panel.object.position.x, panel.origin.x + panel.explode.x * explosion, 8, d);
       panel.object.position.y = THREE.MathUtils.damp(panel.object.position.y, panel.origin.y + panel.explode.y * explosion, 8, d);
