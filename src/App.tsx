@@ -3,7 +3,7 @@ import { ArrowDownRight, ArrowLeft, ArrowRight, Check, ChevronDown, CircleHelp, 
 import Experience, { designs, type PartInfo } from './Experience'
 
 type View = 'home' | 'customize'
-type DesignSnapshot = { designIndex: number; customColors: Record<string, string>; effect: string }
+type DesignSnapshot = { designIndex: number; customColors: Record<string, string>; effect: string; finish: string }
 const swatches = ['#f6f2e9','#171717','#ff3b91','#ff5d35','#ffd400','#c8ff00','#00d9ff','#4b4bff','#9c63ff','#7dffb3','#8a573b','#a7a7a7']
 const effects = [
   {id:'none',label:'Clean finish',desc:'Colour only'},
@@ -21,6 +21,7 @@ export default function App() {
   const [customColors, setCustomColors] = useState<Record<string,string>>({})
   const [activeColor, setActiveColor] = useState('#ff3d91')
   const [effect, setEffect] = useState('none')
+  const [finish, setFinish] = useState('satin')
   const [menuOpen, setMenuOpen] = useState(false)
   const [modelReady, setModelReady] = useState(false)
   const [undoStack, setUndoStack] = useState<DesignSnapshot[]>([])
@@ -49,7 +50,7 @@ export default function App() {
   }, [view])
 
   const recordHistory = () => {
-    setUndoStack(previous => [...previous, { designIndex, customColors: { ...customColors }, effect }].slice(-30))
+    setUndoStack(previous => [...previous, { designIndex, customColors: { ...customColors }, effect, finish }].slice(-30))
     setRedoStack([])
   }
   const undo = () => {
@@ -57,7 +58,7 @@ export default function App() {
     const previous = undoStack[undoStack.length - 1]
     setRedoStack(stack => [...stack, { designIndex, customColors: { ...customColors }, effect }].slice(-30))
     setUndoStack(stack => stack.slice(0, -1))
-    setDesignIndex(previous.designIndex); setCustomColors(previous.customColors); setEffect(previous.effect)
+    setDesignIndex(previous.designIndex); setCustomColors(previous.customColors); setEffect(previous.effect); setFinish(previous.finish)
     setStudioNotice('Previous design state restored.')
   }
   const redo = () => {
@@ -65,7 +66,7 @@ export default function App() {
     const next = redoStack[redoStack.length - 1]
     setUndoStack(stack => [...stack, { designIndex, customColors: { ...customColors }, effect }].slice(-30))
     setRedoStack(stack => stack.slice(0, -1))
-    setDesignIndex(next.designIndex); setCustomColors(next.customColors); setEffect(next.effect)
+    setDesignIndex(next.designIndex); setCustomColors(next.customColors); setEffect(next.effect); setFinish(next.finish)
     setStudioNotice('Design change restored.')
   }
   const openCustomizer = (index = designIndex) => {
@@ -79,6 +80,7 @@ export default function App() {
     setDesignIndex((index + designs.length) % designs.length)
     setCustomColors({})
     setEffect('none')
+    setFinish('satin')
   }
   const applyColor = (color:string) => {
     recordHistory()
@@ -91,9 +93,9 @@ export default function App() {
     }
     setCustomColors(prev => ({...prev,[selectedPart]:color}))
   }
-  const reset = () => { recordHistory(); setCustomColors({}); setEffect('none'); setSelectedPart(null); setDesignIndex(0); setStudioNotice('Studio reset to the default preset.') }
+  const reset = () => { recordHistory(); setCustomColors({}); setEffect('none'); setFinish('satin'); setSelectedPart(null); setDesignIndex(0); setStudioNotice('Studio reset to the default preset.') }
   const exportDesign = () => {
-    const payload = { version: 1, designIndex, presetName: designs[designIndex].name, effect, partColors: customColors, createdAt: new Date().toISOString() }
+    const payload = { version: 1, designIndex, presetName: designs[designIndex].name, effect, finish, partColors: customColors, createdAt: new Date().toISOString() }
     const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'})
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -108,6 +110,8 @@ export default function App() {
       if (data.version !== 1) throw new Error('Unsupported or missing design version. Import a version 1 AF1 design file.')
       if (!Number.isInteger(data.designIndex) || (data.designIndex as number) < 0 || (data.designIndex as number) >= designs.length) throw new Error('The preset index is invalid.')
       if (typeof data.effect !== 'string' || !effects.some(item => item.id === data.effect)) throw new Error('The selected effect is not supported.')
+      const allowedFinishes = ['matte', 'satin', 'gloss', 'high-gloss', 'metallic']
+      if (data.finish !== undefined && (typeof data.finish !== 'string' || !allowedFinishes.includes(data.finish))) throw new Error('The selected material finish is not supported.')
       if (!data.partColors || typeof data.partColors !== 'object' || Array.isArray(data.partColors)) throw new Error('Part colours must be an object.')
       const colors = data.partColors as Record<string, unknown>
       const validated: Record<string, string> = {}
@@ -118,6 +122,7 @@ export default function App() {
       recordHistory()
       setDesignIndex(data.designIndex as number)
       setEffect(data.effect)
+      setFinish(typeof data.finish === 'string' ? data.finish : 'satin')
       setCustomColors(validated)
       setStudioNotice('Design imported successfully.')
     } catch (error) {
@@ -144,7 +149,7 @@ export default function App() {
         <div className="scene-glow" style={{background: designs[designIndex].background}} />
         <div className="scene-caption scene-caption-left"><span>OBJECT 001</span><b>THE ICON, REWIRED.</b></div>
         <div className="scene-caption scene-caption-right"><span>SCROLL TO MUTATE</span><ArrowDownRight size={18}/></div>
-        <div className="scene-canvas"><Experience progress={progress} designIndex={designIndex} customColors={customColors} selectedPart={selectedPart} onParts={setParts} onSelectPart={setSelectedPart} onReady={setModelReady}/></div>
+        <div className="scene-canvas"><Experience progress={progress} designIndex={designIndex} customColors={customColors} selectedPart={selectedPart} finish={finish} onParts={setParts} onSelectPart={setSelectedPart} onReady={setModelReady}/></div>
         <div className="scene-crosshair">+</div>
         <div className="scene-index"><span>AF1 / {String(designIndex+1).padStart(2,'0')}</span><span>{modelReady ? 'MODEL ONLINE' : 'LOADING MODEL'}</span></div>
       </div>
@@ -189,7 +194,8 @@ export default function App() {
           <div className="editor-block"><div className="editor-label"><span>01 / COLOUR STORY</span><span>{String(designIndex+1).padStart(2,'0')} OF 06</span></div><div className="current-design"><div className="current-design-swatch" style={{background:designs[designIndex].background}}/><div><b>{designs[designIndex].name}</b><small>{designs[designIndex].note}</small></div><div className="design-arrows"><button onClick={()=>changeDesign(designIndex-1)} aria-label="Previous design"><ArrowLeft size={15}/></button><button onClick={()=>changeDesign(designIndex+1)} aria-label="Next design"><ArrowRight size={15}/></button></div></div></div>
           <div className="editor-block"><div className="editor-label"><span>02 / TARGET PART</span><span>{visibleParts.length} FOUND</span></div><div className="parts-list">{visibleParts.length ? visibleParts.map((part,i)=><button key={part.name} className={selectedPart===part.name?'part-row part-row-active':'part-row'} onClick={()=>setSelectedPart(part.name)}><span className="part-number">{String(i+1).padStart(2,'0')}</span><span className="part-name">{part.name.replace(/^AF1[_-]?/,'').replaceAll('_',' ')}</span><span className="part-material">{part.materialNames[0] || 'DEFAULT MAT'}</span><span className="part-check">{selectedPart===part.name && <Check size={14}/>}</span></button>) : <p className="parts-loading">Loading mesh names from your GLB…</p>}</div><p className="helper-note">Mesh and material names are read directly from your exported model.</p></div>
           <div className="editor-block"><div className="editor-label"><span>03 / COLOUR PICKER</span><span>{activeColor.toUpperCase()}</span></div><div className="color-grid">{swatches.map(color=><button key={color} className={activeColor===color?'color-swatch color-swatch-active':'color-swatch'} style={{'--swatch':color} as React.CSSProperties} onClick={()=>applyColor(color)} aria-label={'Apply '+color}><span/></button>)}</div><div className="custom-color-row"><label htmlFor="customColor">CUSTOM HEX</label><input id="customColor" value={activeColor} onChange={e=>setActiveColor(e.target.value)} onBlur={()=>/^#[0-9a-fA-F]{6}$/.test(activeColor)&&applyColor(activeColor)} maxLength={7}/><button onClick={()=>/^#[0-9a-fA-F]{6}$/.test(activeColor)&&applyColor(activeColor)}>APPLY</button></div></div>
-          <div className="editor-block"><div className="editor-label"><span>04 / SURFACE EFFECT</span><Sparkles size={14}/></div><div className="effects-list">{effects.map(item=><button key={item.id} className={effect===item.id?'effect-option effect-option-active':'effect-option'} onClick={()=>{recordHistory();setEffect(item.id);setStudioNotice('')}}><span className={'effect-icon effect-'+item.id}>{item.id==='none'?'○':item.id==='rainbow'?'◉':item.id==='drip'?'⌁':'✳'}</span><span><b>{item.label}</b><small>{item.desc}</small></span><span className="effect-radio"/></button>)}</div><p className="helper-note">{effect==='none'?'Keep the original texture detail and experiment with colour.':effect==='rainbow'?'Rainbow is selected. Full texture-mask shader support can be layered in next.':effect==='drip'?'Drip paint mode selected. A transparent decal or baked mask is needed for accurate drips.':'Splatter mode selected. Use transparent decal textures for realistic paint marks.'}</p></div>
+          <div className="editor-block"><div className="editor-label"><span>04 / MATERIAL FINISH</span><span>WHOLE SNEAKER</span></div><div className="effects-list">{[{id:'matte',label:'Matte',desc:'Soft / low reflectance'},{id:'satin',label:'Satin',desc:'Balanced sheen'},{id:'gloss',label:'Gloss',desc:'Clear reflections'},{id:'high-gloss',label:'High gloss',desc:'Sharp highlights'},{id:'metallic',label:'Metallic',desc:'Metal-like response'}].map(item=><button key={item.id} className={finish===item.id?'effect-option effect-option-active':'effect-option'} onClick={()=>{recordHistory();setFinish(item.id);setStudioNotice('')}}><span className="effect-icon">{item.id==='matte'?'◌':item.id==='satin'?'◍':item.id==='gloss'?'◉':item.id==='high-gloss'?'✦':'◇'}</span><span><b>{item.label}</b><small>{item.desc}</small></span><span className="effect-radio"/></button>)}</div><p className="helper-note">Finish controls update the sneaker's physically based roughness and metallic response.</p></div>
+          <div className="editor-block"><div className="editor-label"><span>05 / SURFACE EFFECT</span><Sparkles size={14}/></div><div className="effects-list">{effects.map(item=><button key={item.id} className={effect===item.id?'effect-option effect-option-active':'effect-option'} onClick={()=>{recordHistory();setEffect(item.id);setStudioNotice('')}}><span className={'effect-icon effect-'+item.id}>{item.id==='none'?'○':item.id==='rainbow'?'◉':item.id==='drip'?'⌁':'✳'}</span><span><b>{item.label}</b><small>{item.desc}</small></span><span className="effect-radio"/></button>)}</div><p className="helper-note">{effect==='none'?'Keep the original texture detail and experiment with colour.':effect==='rainbow'?'Rainbow is selected. Full texture-mask shader support can be layered in next.':effect==='drip'?'Drip paint mode selected. A transparent decal or baked mask is needed for accurate drips.':'Splatter mode selected. Use transparent decal textures for realistic paint marks.'}</p></div>
           <div className="editor-actions">
             <div className="history-actions"><button className="reset-button" disabled={!undoStack.length} onClick={undo}><Undo2 size={14}/> UNDO</button><button className="reset-button" disabled={!redoStack.length} onClick={redo}><Redo2 size={14}/> REDO</button></div>
             <button className="button button-acid" onClick={exportDesign}><Download size={15}/> EXPORT DESIGN SETTINGS</button>
