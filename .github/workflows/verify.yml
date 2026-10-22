@@ -1,0 +1,47 @@
+name: Verify CHAMBER
+
+on:
+  push:
+    branches:
+      - main
+      - "feat/**"
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: TypeScript and production build
+        run: npm run build
+      - name: Install temporary browser-test dependency
+        run: npm install --no-save --package-lock=false playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Start preview server
+        run: |
+          npm run preview -- --host 127.0.0.1 > /tmp/chamber-preview.log 2>&1 &
+          echo $! > /tmp/chamber-preview.pid
+      - name: Wait for preview
+        run: |
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/chamber-preview.log
+          exit 1
+      - name: Smoke-test desktop and mobile interactions
+        run: node scripts/smoke.mjs
