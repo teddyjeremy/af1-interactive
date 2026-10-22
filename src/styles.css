@@ -851,3 +851,18 @@ button:active:not(:disabled) { transform: scale(.985); }
   .customizer-panel .inst-group { padding: .8rem; }
   .cart { top: 5rem; right: .5rem; left: .5rem; width: auto; }
 }
+
+
+/* Configurator-first: the shoe and its controls stay on one fixed screen. */
+.progress-bar, .story-overlay, .story-footer, .story-kicker, .story-copy, .scroll-hint, .end-action { display: none !important; }
+.customizer-panel { top: 5.15rem; bottom: .75rem; }
+.customizer-panel .instrument { min-height: 0; }
+.customizer-panel .inst-scroll { overscroll-behavior: contain; }
+.customizer-panel .dock-head .chip { min-height: 2.3rem; }
+@media (min-width: 761px) {
+  .customizer-panel { width: min(430px, calc(100vw - 2rem)); }
+}
+@media (max-width: 760px) {
+  .customizer-panel { max-height: min(74dvh, 700px); }
+  .customizer-panel .instrument { max-height: min(74dvh, 700px); }
+}

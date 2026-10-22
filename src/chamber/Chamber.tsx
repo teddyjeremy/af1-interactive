@@ -1,6 +1,6 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { useProgress } from "@react-three/drei";
-import { Camera, ChevronDown, Download, Link2, Maximize2, Redo2, RotateCcw, Undo2, Upload } from "lucide-react";
+import { Camera, ChevronDown, Download, Link2, Maximize2, Redo2, RotateCcw, Shuffle, Undo2, Upload } from "lucide-react";
 import { Cart } from "./Cart";
 import { Scene } from "./Scene";
 import { takeShot } from "./shot";
@@ -74,11 +74,8 @@ class StageBoundary extends Component<{ children: ReactNode }, { message: string
 
 export function Chamber() {
   const scroller = useRef<HTMLDivElement>(null);
-  const bar = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const progressRef = useRef(0);
-  const [ready, setReady] = useState(false);
-  const [storyStage, setStoryStage] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [webgl, setWebgl] = useState(true);
   const [hidden, setHidden] = useState(false);
@@ -93,7 +90,6 @@ export function Chamber() {
   const past = useChamber((s) => s.past.length);
   const future = useChamber((s) => s.future.length);
   const notice = useChamber((s) => s.notice);
-  const reduced = useChamber((s) => s.reduced);
   const size = useChamber((s) => s.size);
   const cartCount = useChamber((s) => s.cart.reduce((sum, line) => sum + line.qty, 0));
   const cartOpen = useChamber((s) => s.cartOpen);
@@ -107,7 +103,6 @@ export function Chamber() {
     useChamber.getState().setReduced(motion.matches);
     useChamber.getState().hydrateCart();
     useChamber.getState().hydrateStudy();
-    setSheet(true);
     const onMotion = () => useChamber.getState().setReduced(motion.matches);
     const onHide = () => setHidden(document.hidden);
     motion.addEventListener("change", onMotion);
@@ -150,11 +145,13 @@ export function Chamber() {
       const tag = target?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
       const store = useChamber.getState();
-      const onSlider = target?.getAttribute("role") === "slider";
-      if (event.key === "b") store.setMode("bench", progressRef.current);
-      if (event.key === "p") {
-        store.setMode("pass");
-        scroller.current?.scrollTo({ top: 0, behavior: store.reduced ? "auto" : "smooth" });
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        if (event.shiftKey) store.redo();
+        else store.undo();
+      }
+      if (store.mode === "bench" && !target?.getAttribute("role")?.includes("slider") && event.key >= "1" && event.key <= "6") {
+        store.setCamera(CAMERAS[Number(event.key) - 1].id);
       }
       if (event.key === "m" && store.mode === "bench") setSheet((open) => !open);
       if (event.key === "c") {
@@ -166,87 +163,10 @@ export function Chamber() {
         if (store.cartOpen) store.setCartOpen(false);
         else setSheet(false);
       }
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
-        event.preventDefault();
-        if (event.shiftKey) store.redo();
-        else store.undo();
-      }
-      if (store.mode === "bench" && !onSlider && event.key >= "1" && event.key <= "6") {
-        store.setCamera(CAMERAS[Number(event.key) - 1].id);
-      }
-      if (onSlider && (event.key === "ArrowUp" || event.key === "ArrowDown" || event.key === "Home" || event.key === "End")) {
-        return;
-      }
-      if (event.key === " " && tag === "BUTTON") return;
-      const paging =
-        event.key === "PageDown" ||
-        event.key === "PageUp" ||
-        event.key === "Home" ||
-        event.key === "End" ||
-        event.key === " ";
-      const nudging = store.mode === "pass" && (event.key === "ArrowDown" || event.key === "ArrowUp");
-      if (!paging && !nudging) return;
-      event.preventDefault();
-      const key = event.key;
-      const fromBench = store.mode !== "pass";
-      if (fromBench) store.setMode("pass");
-      const apply = (resume: boolean) => {
-        const node = scroller.current;
-        if (!node) return;
-        const page = Math.max(160, Math.round(node.clientHeight * 0.82));
-        const step = Math.max(72, Math.round(node.clientHeight * 0.28));
-        const max = Math.max(0, node.scrollHeight - node.clientHeight);
-        let top = resume ? progressRef.current * max : node.scrollTop;
-        if (key === "Home") top = 0;
-        else if (key === "End") top = max;
-        else if (key === "PageUp") top -= page;
-        else if (key === "ArrowUp") top -= step;
-        else if (key === "ArrowDown") top += step;
-        else if (key === "PageDown" || key === " ") top += page;
-        node.scrollTop = Math.min(max, Math.max(0, top));
-      };
-      if (!fromBench) {
-        apply(false);
-        return;
-      }
-      let frames = 0;
-      const waitForPass = () => {
-        frames += 1;
-        const node = scroller.current;
-        if (node && node.scrollHeight > node.clientHeight + 8) {
-          apply(true);
-          return;
-        }
-        if (frames < 40) requestAnimationFrame(waitForPass);
-      };
-      requestAnimationFrame(waitForPass);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-
-  function onScroll(event: React.UIEvent<HTMLDivElement>) {
-    const el = event.currentTarget;
-    const max = el.scrollHeight - el.clientHeight;
-    const next = max > 0 ? el.scrollTop / max : 0;
-    progressRef.current = next;
-    const nextStage = next < 0.18 ? 0 : next < 0.38 ? 1 : next < 0.58 ? 2 : next < 0.79 ? 3 : 4;
-    setStoryStage((current) => current === nextStage ? current : nextStage);
-    if (bar.current) bar.current.style.transform = `scaleX(${next})`;
-    const done = next > 0.94;
-    setReady((current) => (current === done ? current : done));
-  }
-
-  function leaveBench() {
-    useChamber.getState().setMode("pass");
-    const el = scroller.current;
-    if (!el) return;
-    el.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
-  }
-
-  function openBench() {
-    useChamber.getState().setMode("bench", progressRef.current);
-  }
 
   function edit(patch: Partial<PartStyle>) {
     const store = useChamber.getState();
@@ -339,14 +259,12 @@ export function Chamber() {
   return (
     <div
       ref={scroller}
-      onScroll={onScroll}
-      className={`relative h-dvh bg-ink text-bone ${mode === "bench" ? "overflow-hidden" : "overflow-y-auto"}`}
+      className="relative h-dvh overflow-hidden bg-ink text-bone"
     >
       <div className="sticky top-0 h-dvh">
-        <div ref={bar} className="progress-bar" />
         {mounted && webgl ? (
           <StageBoundary>
-            <div className={mode === "bench" && sheet ? "absolute inset-y-0 left-0 right-0 md:right-[430px]" : "absolute inset-0"}>
+            <div className={sheet ? "absolute inset-y-0 left-0 right-0 md:right-[430px]" : "absolute inset-0"}>
               <Scene progressRef={progressRef} hidden={hidden} />
             </div>
           </StageBoundary>
@@ -362,14 +280,8 @@ export function Chamber() {
         <header className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 px-5 py-4 md:px-8">
           <div>
             <p className="wordmark text-bone">AF1 STUDIO <span className="brand-slash">/</span> NIKE</p>
-            {mode === "pass" && !ready && <p className="eyebrow">THE ORIGINAL. YOURS TO REWORK.</p>}
           </div>
           <div className="flex gap-2">
-            {mode === "bench" && (
-              <button type="button" className="mode-btn" onClick={leaveBench}>
-                Overview
-              </button>
-            )}
             <button
               type="button"
               className={cartOpen ? "mode-btn mode-btn-on" : "mode-btn"}
@@ -380,51 +292,6 @@ export function Chamber() {
             </button>
           </div>
         </header>
-
-        {mode === "pass" && (
-          <div className={`story-overlay story-stage-${storyStage}`} aria-live="polite">
-            <div className="story-kicker">
-              <span className="story-live-dot" />
-              <span>{["THE ORIGINAL / 1982", "THE DETAILS / 01", "BUILT DIFFERENT / 02", "MAKE A STATEMENT / 03", "MADE BY YOU / 04"][storyStage]}</span>
-            </div>
-            <div key={storyStage} className="story-copy">
-              <p className="story-index">0{storyStage + 1} <span>/ 05</span></p>
-              <h1>{[
-                <>An icon<br /><em>Reworked</em></>,
-                <>Made for<br /><em>your world</em></>,
-                <>Look closer<br /><em>Feel more</em></>,
-                <>Your colour<br /><em>Your rules</em></>,
-                <>One icon<br /><em>Your signature</em></>,
-              ][storyStage]}</h1>
-              <p className="story-description">{[
-                "The Air Force 1 is a timeless silhouette, ready for your point of view",
-                "Premium textures, considered details and a profile that needs no introduction",
-                "Explore the layers, materials and silhouette that make the AF1 unmistakable",
-                "Go tonal, go bold or build a colour story that feels like you",
-                "Choose your colourway, finish, texture and size to make the pair your own",
-              ][storyStage]}</p>
-            </div>
-            <div className="story-footer">
-              <div className="story-steps" aria-label={`Story section ${storyStage + 1} of 5`}>
-                {[0, 1, 2, 3, 4].map((step) => (
-                  <button key={step} type="button" className={step === storyStage ? "story-step story-step-active" : "story-step"} aria-label={`Go to story section ${step + 1}`} onClick={() => {
-                    const node = scroller.current;
-                    if (!node) return;
-                    const max = Math.max(0, node.scrollHeight - node.clientHeight);
-                    node.scrollTo({ top: max * [0, 0.25, 0.5, 0.75, 1][step], behavior: reduced ? "auto" : "smooth" });
-                  }} />
-                ))}
-              </div>
-              <span className="story-counter">SCROLL TO DISCOVER <span>↓</span></span>
-            </div>
-          </div>
-        )}
-
-        {mode === "pass" && ready && (
-          <button type="button" className="mode-btn mode-btn-on end-action" onClick={openBench}>
-            Customise yours
-          </button>
-        )}
 
         {mode === "bench" && <Knife value={knife} onChange={(value) => useChamber.getState().setKnife(value)} />}
 
@@ -474,7 +341,7 @@ export function Chamber() {
               {style && (
                 <div className="inst-scroll">
                   <div className="inst-group">
-                    <p className="inst-label">Choose a colourway</p>
+                    <div className="flex items-center justify-between gap-3"><p className="inst-label">Choose a colourway</p><button type="button" className="chip" onClick={() => useChamber.getState().randomizeColorway()}><Shuffle /> Random colourway</button></div>
                   <div className="flex items-center gap-2 overflow-x-auto">
                     {PRESETS.map((preset, index) => (
                       <button
@@ -553,6 +420,7 @@ export function Chamber() {
                         onBlur={() => useChamber.getState().endEdit()}
                       />
                     </label>
+                    <button type="button" className="chip" onClick={() => useChamber.getState().applyColorToAll(style.color)}>Apply colour to all</button>
                   </div>
                   </div>
                   <div className="inst-group">
@@ -680,12 +548,6 @@ export function Chamber() {
           </div>
         )}
 
-        {mode === "pass" && notice && (
-          <p className="absolute bottom-6 left-1/2 z-20 -translate-x-1/2 font-mono text-xs text-heat" role="status">
-            {notice}
-          </p>
-        )}
-
         <input
           ref={fileRef}
           type="file"
@@ -697,7 +559,6 @@ export function Chamber() {
           }}
         />
       </div>
-      {mode === "pass" && <div className="h-[380vh]" aria-hidden="true" />}
     </div>
   );
 }
