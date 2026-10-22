@@ -423,7 +423,7 @@ export function Chamber() {
 
         {mode === "pass" && ready && (
           <button type="button" className="mode-btn mode-btn-on end-action" onClick={openBench}>
-            MAKE IT YOURS
+            Customise yours
           </button>
         )}
 
@@ -455,7 +455,7 @@ export function Chamber() {
             <div className="instrument">
               <div className="dock-head">
                 <div className="min-w-0 flex-1">
-                  <p className="inst-label">MAKE IT YOURS</p>
+                  <p className="inst-label">YOUR PAIR</p>
                   <p className="truncate text-sm text-bone">{design.name}</p>
                   <p className="truncate text-xs text-steel">
                     {partLabel}
