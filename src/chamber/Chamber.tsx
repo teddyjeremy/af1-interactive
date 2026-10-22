@@ -87,6 +87,13 @@ export function Chamber() {
   const design = useChamber((s) => s.design);
   const selected = useChamber((s) => s.selected);
   const isolated = useChamber((s) => s.isolated);
+  const explosion = useChamber((s) => s.explosion);
+  const wireframe = useChamber((s) => s.wireframe);
+  const hiddenParts = useChamber((s) => s.hiddenParts);
+  const lighting = useChamber((s) => s.lighting);
+  const turntable = useChamber((s) => s.turntable);
+  const inspection = useChamber((s) => s.inspection);
+  const compareOriginal = useChamber((s) => s.compareOriginal);
   const prints = useChamber((s) => s.prints);
   const knife = useChamber((s) => s.knife);
   const camera = useChamber((s) => s.camera);
@@ -474,6 +481,43 @@ export function Chamber() {
 
               {style && (
                 <div className="inst-scroll">
+                  <div className="inst-group">
+                    <div className="price-row">
+                      <p className="inst-label">Inside the icon</p>
+                      <span className="text-xs text-steel">6 sec · 360°</span>
+                    </div>
+                    <p className="max-w-lg text-xs leading-relaxed text-steel">
+                      Pull the AF1 apart. Watch every component turn in the light, then settle back into place.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" className="chip chip-on" onClick={() => useChamber.getState().playBuildSequence()}>
+                        <RotateCcw /> Watch the build
+                      </button>
+                      <button type="button" className={wireframe ? "chip chip-on" : "chip"} aria-pressed={wireframe} onClick={() => useChamber.getState().setWireframe(!wireframe)}>
+                        Technical sketch
+                      </button>
+                      <button type="button" className={turntable ? "chip chip-on" : "chip"} aria-pressed={turntable} onClick={() => useChamber.getState().setTurntable(!turntable)}>
+                        360° spin
+                      </button>
+                      <button type="button" className={inspection ? "chip chip-on" : "chip"} aria-pressed={inspection} onClick={() => useChamber.getState().setInspection(!inspection)}>
+                        Light sweep
+                      </button>
+                      <button type="button" className={compareOriginal ? "chip chip-on" : "chip"} aria-pressed={compareOriginal} onClick={() => useChamber.getState().setCompareOriginal(!compareOriginal)}>
+                        {compareOriginal ? "Your colourway" : "Original white"}
+                      </button>
+                      <button type="button" className="chip" onClick={() => hiddenParts.length && selected.every((id) => hiddenParts.includes(id)) ? useChamber.getState().showAllParts() : useChamber.getState().togglePartsVisibility(selected)}>
+                        {hiddenParts.length && selected.every((id) => hiddenParts.includes(id)) ? "Show all pieces" : "Hide selected"}
+                      </button>
+                    </div>
+                    <label className="flex flex-col gap-2 text-xs text-steel">
+                      <span className="flex justify-between"><span>Exploded view</span><span>{Math.round(explosion * 100)}%</span></span>
+                      <input className="w-full accent-[var(--color-heat)]" type="range" min="0" max="100" value={Math.round(explosion * 100)} aria-label="Exploded view" onChange={(event) => useChamber.getState().setExplosion(Number(event.target.value) / 100)} />
+                    </label>
+                    <label className="flex flex-col gap-2 text-xs text-steel">
+                      <span className="flex justify-between"><span>Studio light</span><span>{Math.round(lighting * 100)}%</span></span>
+                      <input className="w-full accent-[var(--color-heat)]" type="range" min="40" max="150" value={Math.round(lighting * 100)} aria-label="Studio light" onChange={(event) => useChamber.getState().setLighting(Number(event.target.value) / 100)} />
+                    </label>
+                  </div>
                   <div className="inst-group">
                     <p className="inst-label">Colourway</p>
                   <div className="flex items-center gap-2 overflow-x-auto">
