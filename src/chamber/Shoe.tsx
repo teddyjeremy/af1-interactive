@@ -2,12 +2,19 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
-import { isPartId, LAST_HIDDEN, type PartId } from "./parts";
-import { passPair } from "./presets";
+import { isPartId, LAST_HIDDEN, PARTS, type PartId } from "./parts";
+import { ORIGINAL, passPair } from "./presets";
 import { mixFinish, MODEL_URL, toPhysical, treatmentId, woodMaterial } from "./materials";
 import { useChamber } from "./store";
 
-type Panel = { name: PartId; material: THREE.MeshPhysicalMaterial };
+type Panel = {
+  name: PartId;
+  material: THREE.MeshPhysicalMaterial;
+  object: THREE.Mesh;
+  origin: THREE.Vector3;
+  explode: THREE.Vector3;
+  baseVisible: boolean;
+};
 
 const right = new THREE.Vector3();
 const centerPos = new THREE.Vector3();
@@ -35,6 +42,8 @@ function prepare(source: THREE.Object3D, shellPlane: THREE.Plane, lastPlane: THR
   const sphere = box.getBoundingSphere(new THREE.Sphere());
 
   const shell = source.clone(true);
+  shell.updateMatrixWorld(true);
+  const shellCenter = new THREE.Box3().setFromObject(shell).getCenter(new THREE.Vector3());
   const panels: Panel[] = [];
   shell.traverse((obj) => {
     if (!(obj instanceof THREE.Mesh)) return;
@@ -43,8 +52,37 @@ function prepare(source: THREE.Object3D, shellPlane: THREE.Plane, lastPlane: THR
     obj.material = mat;
     obj.castShadow = !/Stitch|Lace|Eyelet|Logo/.test(obj.name);
     obj.receiveShadow = false;
-    if (isPartId(obj.name)) panels.push({ name: obj.name, material: mat });
+    if (isPartId(obj.name)) {
+      obj.geometry.computeBoundingBox();
+      const meshCenter = obj.geometry.boundingBox?.getCenter(new THREE.Vector3()) ?? new THREE.Vector3();
+      obj.localToWorld(meshCenter);
+      const radial = meshCenter.clone().sub(shellCenter);
+      if (radial.lengthSq() < 1e-5) radial.set(0, 1, 0);
+      radial.normalize();
+      let localDirection = radial.clone();
+      if (obj.parent) {
+        const localOrigin = obj.parent.worldToLocal(meshCenter.clone());
+        const localTip = obj.parent.worldToLocal(meshCenter.clone().add(radial));
+        localDirection = localTip.sub(localOrigin).normalize();
+      }
+      const radius = meshCenter.distanceTo(shellCenter);
+      const spread = (0.14 + 0.42 * Math.min(1, radius / (maxDim * 0.45))) / scale;
+      panels.push({
+        name: obj.name,
+        material: mat,
+        object: obj,
+        origin: obj.position.clone(),
+        explode: localDirection.multiplyScalar(spread),
+        baseVisible: obj.visible,
+      });
+    }
   });
+
+  const foundParts = new Set(panels.map((panel) => panel.name));
+  const missingParts = PARTS.filter((name) => !foundParts.has(name));
+  if (missingParts.length) {
+    console.warn("[CHAMBER] GLB panels missing from the named-mesh hierarchy:", missingParts);
+  }
 
   const last = shell.clone(true);
   const wood = woodMaterial(lastPlane);
@@ -109,8 +147,17 @@ export function Shoe({
     group.updateWorldMatrix(true, true);
     group.getWorldPosition(centerPos);
     right.set(1, 0, 0).applyQuaternion(state.camera.quaternion).normalize();
-    const knife = useChamber.getState().knife;
+    const chamber = useChamber.getState();
+    const knife = chamber.knife;
     prepared.last.visible = knife > 0.015;
+    const explosion = chamber.mode === "bench" ? chamber.explosion : 0;
+    const hiddenParts = new Set(chamber.mode === "bench" ? chamber.hiddenParts : []);
+    for (const panel of prepared.panels) {
+      panel.object.position.x = THREE.MathUtils.damp(panel.object.position.x, panel.origin.x + panel.explode.x * explosion, 8, d);
+      panel.object.position.y = THREE.MathUtils.damp(panel.object.position.y, panel.origin.y + panel.explode.y * explosion, 8, d);
+      panel.object.position.z = THREE.MathUtils.damp(panel.object.position.z, panel.origin.z + panel.explode.z * explosion, 8, d);
+      panel.object.visible = panel.baseVisible && !hiddenParts.has(panel.name);
+    }
     const along = THREE.MathUtils.lerp(-1.7, 1.7, knife);
     planePoint.copy(centerPos).addScaledVector(right, along);
     shellPlane.setFromNormalAndCoplanarPoint(right, planePoint);
@@ -165,7 +212,11 @@ function paint(
   const chamber = useChamber.getState();
   const sample =
     chamber.mode === "bench"
-      ? { from: chamber.design, to: chamber.design, t: 0 }
+      ? {
+          from: chamber.compareOriginal ? ORIGINAL : chamber.design,
+          to: chamber.compareOriginal ? ORIGINAL : chamber.design,
+          t: 0,
+        }
       : passPair(progress);
   const selected = new Set(chamber.selected);
   const selKey = chamber.selected.join("|");
@@ -195,6 +246,7 @@ function paint(
     mat.sheen = THREE.MathUtils.damp(mat.sheen, finish.sheen, 7, delta);
     mat.sheenColor.set("#f4efe6");
     mat.envMapIntensity = THREE.MathUtils.damp(mat.envMapIntensity, finish.env, 7, delta);
+    mat.wireframe = chamber.mode === "bench" && chamber.wireframe;
 
     const treat = sample.t < 0.5 ? from.treatment : to.treatment;
     const treatValue = treatmentId(treat);

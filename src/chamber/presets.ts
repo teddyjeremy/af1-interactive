@@ -47,6 +47,12 @@ export const UNIVERSITY = paint("University", [
   { parts: ["AF1_Stitching", "AF1_Stitching_Sole"], color: "#e7e2d8", finish: "leather" },
 ]);
 
+/** Classic white-on-white AF1 baseline used for non-destructive comparison. */
+export const ORIGINAL = paint("Original white", [
+  { parts: ["AF1_Midsole", "AF1_Outsole"], color: "#f3ecdf", finish: "rubber" },
+  { parts: ["AF1_Eyelet", "AF1_LaceTip"], color: "#c8c2b8", finish: "metal" },
+]);
+
 export const PRESETS: Design[] = [
   UNIVERSITY,
   paint("Court", [

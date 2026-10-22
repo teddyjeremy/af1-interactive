@@ -341,6 +341,113 @@
   }
 }
 
+
+/* Construction studio: tactile controls and a deeper instrument-glass surface. */
+.progress-bar {
+  background: linear-gradient(90deg, #c45c26 0%, #e5b37b 58%, #f3ecdf 100%);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--color-heat) 55%, transparent);
+}
+
+.vignette {
+  background:
+    radial-gradient(ellipse at 50% 43%, transparent 30%, color-mix(in srgb, #090909 22%, transparent) 68%, #090909 100%),
+    linear-gradient(180deg, color-mix(in srgb, #090909 30%, transparent), transparent 24%, transparent 70%, color-mix(in srgb, #090909 52%, transparent));
+}
+
+.vignette::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent 0 3px, #f3ecdf 4px, transparent 5px);
+  mix-blend-mode: screen;
+}
+
+.instrument {
+  border-color: color-mix(in srgb, var(--color-steel) 32%, var(--color-line));
+  background:
+    radial-gradient(ellipse at 0% 0%, color-mix(in srgb, var(--color-heat) 8%, transparent), transparent 48%),
+    linear-gradient(145deg, color-mix(in srgb, #171513 94%, transparent), color-mix(in srgb, #090909 96%, transparent));
+  box-shadow: 0 24px 90px rgb(0 0 0 / 42%), inset 0 1px 0 rgb(243 236 223 / 5%);
+}
+
+.mode-btn,
+.chip,
+.icon-btn {
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+button:not(:disabled):hover {
+  border-color: color-mix(in srgb, var(--color-bone) 62%, var(--color-line));
+}
+
+.chip:not(.chip-on):hover,
+.mode-btn:not(.mode-btn-on):hover,
+.icon-btn:hover {
+  background-color: color-mix(in srgb, var(--color-bone) 7%, var(--color-ink));
+  transform: translateY(-1px);
+}
+
+.chip-on:hover,
+.mode-btn-on:hover {
+  box-shadow: 0 0 22px rgb(243 236 223 / 9%);
+}
+
+.construction-tools {
+  background:
+    radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--color-heat) 9%, transparent), transparent 52%),
+    color-mix(in srgb, #0d0c0b 34%, transparent);
+}
+
+.construction-range {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--color-bone);
+  font-size: 0.76rem;
+}
+
+.construction-range > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.construction-range input[type="range"] {
+  width: 100%;
+  height: 1.1rem;
+  accent-color: var(--color-heat);
+  cursor: ew-resize;
+}
+
+.inline-icon {
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin-right: 0.2rem;
+  vertical-align: -0.1rem;
+}
+
+@media (max-width: 767px) {
+  .instrument {
+    max-height: min(48dvh, 26rem);
+  }
+
+  .construction-tools {
+    gap: 0.65rem;
+  }
+
+  .construction-range input[type="range"] {
+    min-height: 1.5rem;
+  }
+}
+
 @media (min-width: 768px) {
   .cart {
     right: auto;
