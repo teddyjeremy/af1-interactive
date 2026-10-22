@@ -25,11 +25,11 @@ function getColor(material: THREE.Material) {
   return m.color?.getHexString ? '#' + m.color.getHexString() : '#f5f0e6'
 }
 
-function Shoe({ progress, designIndex, customColors, selectedPart, onParts, onSelectPart, onReady }: {
+function Shoe({ progress, designIndex, customColors, selectedPart, onParts, onSelectPart, onReady, interactive = false }: {
   progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null;
-  onParts: (parts: PartInfo[]) => void; onSelectPart: (name: string) => void; onReady: (ready: boolean) => void
+  onParts: (parts: PartInfo[]) => void; onSelectPart: (name: string) => void; onReady: (ready: boolean) => void; interactive?: boolean
 }) {
-  const { scene } = useGLTF('/models/nike%20shoes.glb')
+  const { scene } = useGLTF('https://raw.githubusercontent.com/teddyjeremy/af1-interactive/main/models/nike%20shoes.glb')
   const group = useRef<THREE.Group>(null)
   const meshes = useRef<THREE.Mesh[]>([])
   const originalColors = useRef<Record<string,string>>({})
@@ -94,7 +94,7 @@ function Shoe({ progress, designIndex, customColors, selectedPart, onParts, onSe
   })
 
   return <group ref={group} rotation={[0.04, -0.65, -0.08]} position={[0,-0.08,0]}>
-    <primitive object={scene} />
+    <primitive object={scene} onClick={(event: any) => { if (!interactive) return; event.stopPropagation(); if (event.object?.name) onSelectPart(event.object.name) }} />
     {partData.length > 0 && <mesh visible={false}><sphereGeometry args={[0.01]} /><meshBasicMaterial /></mesh>}
     {/* Invisible hit targets are avoided; real mesh clicks are wired by the parent Canvas event handler. */}
   </group>
@@ -108,7 +108,7 @@ export default function Experience({ progress, designIndex, customColors, select
   progress: React.MutableRefObject<number>; designIndex: number; customColors: Record<string,string>; selectedPart: string | null;
   onParts: (parts: PartInfo[]) => void; onSelectPart: (name: string) => void; onReady: (ready: boolean) => void; interactive?: boolean
 }) {
-  const { scene } = useGLTF('/models/nike%20shoes.glb')
+  const { scene } = useGLTF('https://raw.githubusercontent.com/teddyjeremy/af1-interactive/main/models/nike%20shoes.glb')
   const handleClick = (event: any) => {
     if (!interactive) return
     event.stopPropagation()
@@ -131,7 +131,7 @@ export default function Experience({ progress, designIndex, customColors, select
     <pointLight position={[3, -1, 2]} intensity={2.4} color={designs[designIndex].accent} />
     <Suspense fallback={<Loading />}>
       <Float speed={1.25} rotationIntensity={0.05} floatIntensity={0.13}>
-        <Shoe progress={progress} designIndex={designIndex} customColors={customColors} selectedPart={selectedPart} onParts={onParts} onSelectPart={onSelectPart} onReady={onReady} />
+        <Shoe progress={progress} designIndex={designIndex} customColors={customColors} selectedPart={selectedPart} onParts={onParts} onSelectPart={onSelectPart} onReady={onReady} interactive={interactive} />
       </Float>
       <Environment preset="studio" />
       <ContactShadows position={[0,-1.25,0]} opacity={0.32} scale={8} blur={2.4} far={4} />
@@ -139,4 +139,4 @@ export default function Experience({ progress, designIndex, customColors, select
     <OrbitControls enabled={interactive} enablePan={false} minDistance={3.5} maxDistance={7} minPolarAngle={Math.PI*0.25} maxPolarAngle={Math.PI*0.72} />
   </Canvas>
 }
-useGLTF.preload('/models/nike%20shoes.glb')
+useGLTF.preload('https://raw.githubusercontent.com/teddyjeremy/af1-interactive/main/models/nike%20shoes.glb')
