@@ -92,6 +92,9 @@ export function Chamber() {
   const wireframe = useChamber((s) => s.wireframe);
   const hiddenParts = useChamber((s) => s.hiddenParts);
   const lighting = useChamber((s) => s.lighting);
+  const turntable = useChamber((s) => s.turntable);
+  const inspection = useChamber((s) => s.inspection);
+  const compareOriginal = useChamber((s) => s.compareOriginal);
   const camera = useChamber((s) => s.camera);
   const past = useChamber((s) => s.past.length);
   const future = useChamber((s) => s.future.length);
@@ -584,6 +587,17 @@ export function Chamber() {
                       </button>
                       <button type="button" className="chip" onClick={() => useChamber.getState().showAllParts()} disabled={!hiddenParts.length && !isolated}>
                         Show all
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" className={turntable ? "chip chip-on" : "chip"} onClick={() => useChamber.getState().setTurntable(!turntable)} aria-pressed={turntable}>
+                        Turntable
+                      </button>
+                      <button type="button" className={inspection ? "chip chip-on" : "chip"} onClick={() => useChamber.getState().setInspection(!inspection)} aria-pressed={inspection}>
+                        Light sweep
+                      </button>
+                      <button type="button" className={compareOriginal ? "chip chip-on" : "chip"} onClick={() => useChamber.getState().setCompareOriginal(!compareOriginal)} aria-pressed={compareOriginal}>
+                        {compareOriginal ? "Showing original" : "Compare original"}
                       </button>
                     </div>
                     <label className="construction-range">
