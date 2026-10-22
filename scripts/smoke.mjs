@@ -30,9 +30,9 @@ try {
   if ((await explode.getAttribute("aria-pressed")) !== "true") throw new Error("Explode control did not activate.");
 
   await page.getByRole("slider", { name: "Explosion intensity" }).evaluate((element) => {
-    element.value = "0.55";
+    const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    setValue?.call(element, "0.55");
     element.dispatchEvent(new Event("input", { bubbles: true }));
-    element.dispatchEvent(new Event("change", { bubbles: true }));
   });
   await page.getByText("55%", { exact: true }).waitFor({ state: "visible", timeout: 3000 });
 
@@ -46,9 +46,9 @@ try {
   await showSelection.click();
 
   await page.getByRole("slider", { name: "Studio lighting intensity" }).evaluate((element) => {
-    element.value = "1.25";
+    const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    setValue?.call(element, "1.25");
     element.dispatchEvent(new Event("input", { bubbles: true }));
-    element.dispatchEvent(new Event("change", { bubbles: true }));
   });
   await page.getByText("125%", { exact: true }).waitFor({ state: "visible", timeout: 3000 });
 
