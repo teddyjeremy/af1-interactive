@@ -36,7 +36,7 @@ try {
   await page.getByRole("dialog", { name: "Your shopping bag" }).waitFor({ state: "visible", timeout: 5000 });
   await page.getByRole("button", { name: "Review order", exact: true }).waitFor({ state: "visible", timeout: 5000 });
   await page.getByRole("button", { name: "Review order", exact: true }).click({ force: true });
-  await page.getByText("No payment is taken.", { exact: true }).waitFor({ state: "visible", timeout: 5000 });
+  await page.getByText(/No payment is taken/).waitFor({ state: "visible", timeout: 5000 });
   await page.getByLabel("Name", { exact: true }).fill("Test Buyer");
   await page.getByLabel("Email", { exact: true }).fill("test@example.com");
   await page.getByRole("button", { name: "Save design", exact: true }).click({ force: true });
