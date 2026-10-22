@@ -114,7 +114,8 @@ function Rig({
     const lambda = reduced ? 16 : mode === "pass" ? 3.4 : 4.2;
     const fit = fitRef.current;
     const distance = frameDistance(fit.radius || 1.25);
-    const lift = chamber.mode === "bench" ? 0.62 : 0.14;
+    const narrow = window.innerWidth < 780;
+    const lift = chamber.mode === "bench" ? (narrow ? 0.02 : 0.58) : 0.14;
     const bob = chamber.mode === "pass" && !reduced ? Math.sin(state.clock.elapsedTime * 0.45) * 0.01 : 0;
 
     if (presentation.current) {
