@@ -56,7 +56,7 @@ export default function App() {
   const undo = () => {
     if (!undoStack.length) return
     const previous = undoStack[undoStack.length - 1]
-    setRedoStack(stack => [...stack, { designIndex, customColors: { ...customColors }, effect }].slice(-30))
+    setRedoStack(stack => [...stack, { designIndex, customColors: { ...customColors }, effect, finish }].slice(-30))
     setUndoStack(stack => stack.slice(0, -1))
     setDesignIndex(previous.designIndex); setCustomColors(previous.customColors); setEffect(previous.effect); setFinish(previous.finish)
     setStudioNotice('Previous design state restored.')
@@ -64,7 +64,7 @@ export default function App() {
   const redo = () => {
     if (!redoStack.length) return
     const next = redoStack[redoStack.length - 1]
-    setUndoStack(stack => [...stack, { designIndex, customColors: { ...customColors }, effect }].slice(-30))
+    setUndoStack(stack => [...stack, { designIndex, customColors: { ...customColors }, effect, finish }].slice(-30))
     setRedoStack(stack => stack.slice(0, -1))
     setDesignIndex(next.designIndex); setCustomColors(next.customColors); setEffect(next.effect); setFinish(next.finish)
     setStudioNotice('Design change restored.')
@@ -187,7 +187,7 @@ export default function App() {
       <div className="studio-layout">
         <div className="studio-viewport">
           <div className="studio-viewport-top"><span>PREVIEW / {designs[designIndex].name}</span><span>DRAG TO ORBIT <MousePointer2 size={13}/></span></div>
-          <div className="studio-model"><Experience progress={progress} designIndex={designIndex} customColors={customColors} selectedPart={selectedPart} onParts={setParts} onSelectPart={setSelectedPart} onReady={setModelReady} interactive/></div>
+          <div className="studio-model"><Experience progress={progress} designIndex={designIndex} customColors={customColors} selectedPart={selectedPart} finish={finish} onParts={setParts} onSelectPart={setSelectedPart} onReady={setModelReady} interactive/></div>
           <div className="studio-viewport-bottom"><span>{selectedPart ? selectedPart : 'SELECT A PART IN THE LIST'}</span><span>{visibleParts.length} MESHES DETECTED</span></div>
         </div>
         <aside className="editor-panel">
