@@ -1,6 +1,6 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { useProgress } from "@react-three/drei";
-import { Camera, ChevronDown, Download, Link2, Maximize2, Redo2, RotateCcw, Undo2, Upload } from "lucide-react";
+import { Box, Camera, ChevronDown, Download, Eye, Layers, Link2, Maximize2, Redo2, RotateCcw, ScanLine, Sun, Undo2, Upload } from "lucide-react";
 import { Cart } from "./Cart";
 import { Scene } from "./Scene";
 import { takeShot } from "./shot";
@@ -88,6 +88,10 @@ export function Chamber() {
   const isolated = useChamber((s) => s.isolated);
   const prints = useChamber((s) => s.prints);
   const knife = useChamber((s) => s.knife);
+  const explosion = useChamber((s) => s.explosion);
+  const wireframe = useChamber((s) => s.wireframe);
+  const hiddenParts = useChamber((s) => s.hiddenParts);
+  const lighting = useChamber((s) => s.lighting);
   const camera = useChamber((s) => s.camera);
   const past = useChamber((s) => s.past.length);
   const future = useChamber((s) => s.future.length);
@@ -333,6 +337,7 @@ export function Chamber() {
   const total = pairPrice(design, prints, size);
   const base = pairPrice(PRESETS[0], false, 9);
   const delta = total - base;
+  const selectionHidden = selected.length > 0 && selected.every((id) => hiddenParts.includes(id));
 
   return (
     <div
@@ -558,6 +563,37 @@ export function Chamber() {
                         </button>
                       )}
                     </div>
+                  </div>
+                  <div className="inst-group construction-tools">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="inst-label">Construction lab</p>
+                      <span className="text-xs text-steel">REAL MESH PANELS</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" className={explosion > 0 ? "chip chip-on" : "chip"} onClick={() => useChamber.getState().setExplosion(1)} aria-pressed={explosion > 0}>
+                        <Box /> Explode
+                      </button>
+                      <button type="button" className={explosion === 0 ? "chip chip-on" : "chip"} onClick={() => useChamber.getState().setExplosion(0)} aria-pressed={explosion === 0}>
+                        <Layers /> Assemble
+                      </button>
+                      <button type="button" className={wireframe ? "chip chip-on" : "chip"} onClick={() => useChamber.getState().setWireframe(!wireframe)} aria-pressed={wireframe}>
+                        <ScanLine /> Blueprint
+                      </button>
+                      <button type="button" className="chip" onClick={() => useChamber.getState().togglePartsVisibility(selected)} disabled={!selected.length}>
+                        <Eye /> {selectionHidden ? "Show selection" : "Hide selection"}
+                      </button>
+                      <button type="button" className="chip" onClick={() => useChamber.getState().showAllParts()} disabled={!hiddenParts.length && !isolated}>
+                        Show all
+                      </button>
+                    </div>
+                    <label className="construction-range">
+                      <span><span>Explosion intensity</span><span className="text-steel">{Math.round(explosion * 100)}%</span></span>
+                      <input type="range" min={0} max={1} step={0.01} value={explosion} onChange={(event) => useChamber.getState().setExplosion(Number(event.target.value))} aria-label="Explosion intensity" />
+                    </label>
+                    <label className="construction-range">
+                      <span><span><Sun className="inline-icon" /> Studio light</span><span className="text-steel">{Math.round(lighting * 100)}%</span></span>
+                      <input type="range" min={0.4} max={1.5} step={0.05} value={lighting} onChange={(event) => useChamber.getState().setLighting(Number(event.target.value))} aria-label="Studio lighting intensity" />
+                    </label>
                   </div>
                   <div className="inst-group">
                     <p className="inst-label">Size</p>
