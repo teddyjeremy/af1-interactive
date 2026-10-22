@@ -431,7 +431,7 @@ export function Chamber() {
 
         {opening && (
           <p className="pointer-events-none absolute top-20 left-5 z-20 text-xs text-steel md:left-8">
-            Opening {Math.round(progress)}%
+            Getting things ready {Math.round(progress)}%
           </p>
         )}
 
