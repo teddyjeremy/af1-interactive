@@ -44,6 +44,8 @@ function Shoe({ progress, designIndex, customColors, selectedPart, finish, effec
         const next = material.clone()
         const standard = next as THREE.MeshStandardMaterial
         if (standard.color?.isColor) next.userData.af1OriginalColor = standard.color.getHexString()
+        if ('emissive' in standard && standard.emissive?.isColor) next.userData.af1OriginalEmissive = standard.emissive.getHexString()
+        if ('emissiveIntensity' in standard) next.userData.af1OriginalEmissiveIntensity = standard.emissiveIntensity
         if ('roughness' in standard) next.userData.af1OriginalRoughness = standard.roughness
         if ('metalness' in standard) next.userData.af1OriginalMetalness = standard.metalness
         return next
@@ -105,6 +107,11 @@ function Shoe({ progress, designIndex, customColors, selectedPart, finish, effec
         const selectedFinish = finishSettings[finish] ?? finishSettings.satin
         if ('roughness' in mat) mat.roughness = selectedFinish.roughness
         if ('metalness' in mat) mat.metalness = selectedFinish.metalness
+        if ('emissive' in mat && mat.emissive?.isColor) {
+          const originalEmissive = mat.userData.af1OriginalEmissive as string | undefined
+          mat.emissive.set(object.name === selectedPart ? '#c9ff45' : '#' + (originalEmissive ?? '000000'))
+          mat.emissiveIntensity = object.name === selectedPart ? 0.28 : Number(mat.userData.af1OriginalEmissiveIntensity ?? 1)
+        }
         mat.needsUpdate = true
       })
     })
